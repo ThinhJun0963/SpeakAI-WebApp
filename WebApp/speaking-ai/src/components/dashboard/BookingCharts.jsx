@@ -11,7 +11,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 
 const bookingData = [
   { month: "Jan", bookings: 400, revenue: 8000 },

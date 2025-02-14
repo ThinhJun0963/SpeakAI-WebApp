@@ -1,6 +1,6 @@
 import React from "react";
 import { Calendar, DollarSign, Users, Clock } from "lucide-react";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent } from "../ui/Card";
 
 const stats = [
   {
