@@ -1,26 +1,29 @@
-import React from "react";
+import React, { useState } from "react";
+import Header from "../components/dashboard/Header";
+import { Menu, X } from "lucide-react";
+import Sidebar from "../components/layout/Sidebar";
 import { Outlet } from "react-router-dom";
 
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
+const AdminDashboard = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-const AdminPage = () => {
   return (
-    <div className="min-h-screen flex bg-gray-100">
-      {/* Fixed Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
-        <Sidebar />
-      </div>
+    <div className="flex h-screen bg-gray-50">
+      {/* Mobile sidebar toggle */}
+      <MobileToggle sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      {/* Main Content Area */}
-      <div className="flex-1 ml-64">
-        {" "}
-        {/* ml-64 to offset fixed sidebar */}
-        {/* Fixed Header */}
-        <div className="fixed top-0 right-0 left-64 h-16 bg-white shadow-sm z-10">
-          <Header />
-        </div>
-        {/* Main Content with proper padding */}
+      {/* Sidebar */}
+      <Sidebar />
+
+      {/* Main content */}
+      <div
+        className={`flex-1 overflow-auto transition-all duration-300 ${
+          sidebarOpen ? "lg:ml-64" : "ml-0"
+        }`}
+      >
+        {/* Header */}
+        <Header />
+
         <main className="pt-16 p-6 min-h-screen overflow-auto">
           <Outlet />
         </main>
@@ -29,4 +32,16 @@ const AdminPage = () => {
   );
 };
 
-export default AdminPage;
+// Mobile Toggle Component
+const MobileToggle = ({ sidebarOpen, setSidebarOpen }) => (
+  <div className="lg:hidden fixed top-4 left-4 z-50">
+    <button
+      onClick={() => setSidebarOpen(!sidebarOpen)}
+      className="p-2 rounded-md bg-white shadow-md text-gray-600 hover:text-blue-600 focus:outline-none"
+    >
+      {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+    </button>
+  </div>
+);
+
+export default AdminDashboard;

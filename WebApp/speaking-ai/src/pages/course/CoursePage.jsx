@@ -8,7 +8,6 @@ const CoursePage = () => {
   const handleCourseCreate = (courseData) => {
     console.log("Created course:", courseData);
     setIsCreating(false);
-    // API call to create course here
   };
 
   return (
