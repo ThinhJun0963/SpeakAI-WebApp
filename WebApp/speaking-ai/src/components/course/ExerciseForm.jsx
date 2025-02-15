@@ -7,6 +7,7 @@ export const ExercisesForm = ({
   setCourseData,
   onPrev,
   onSave,
+  loading,
 }) => {
   const [selectedTopicIndex, setSelectedTopicIndex] = useState(0);
   const [currentExercise, setCurrentExercise] = useState({ content: "" });
@@ -66,14 +67,26 @@ export const ExercisesForm = ({
       </div>
 
       <div className="flex justify-between mt-6">
-        <button onClick={onPrev}>Previous</button>
+        <button
+          onClick={onPrev}
+          disabled={loading}
+          className="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          Previous
+        </button>
         <button
           onClick={onSave}
-          disabled={courseData.topics.some(
-            (topic) => topic.exercises.length === 0
-          )}
+          disabled={
+            loading ||
+            courseData.topics.some((topic) => topic.exercises.length === 0)
+          }
+          className={`px-4 py-2 rounded ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-500 hover:bg-blue-600 text-white"
+          }`}
         >
-          Save Course
+          {loading ? "Creating..." : "Save Course"}
         </button>
       </div>
     </div>
