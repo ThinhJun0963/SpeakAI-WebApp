@@ -127,5 +127,3 @@ export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
     </div>
   );
 };
-
-export default CourseForm;

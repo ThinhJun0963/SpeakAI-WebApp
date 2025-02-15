@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import Label from "../ui/Laybel";
+import { calculateFactors } from "../../utils/calculations";
+import Label from "../ui/Label";
 import TextArea from "../ui/TextArea";
 
 export const ExercisesForm = ({
@@ -9,16 +10,56 @@ export const ExercisesForm = ({
   onSave,
   loading,
 }) => {
-  const [selectedTopicIndex, setSelectedTopicIndex] = useState(0);
-  const [currentExercise, setCurrentExercise] = useState({ content: "" });
+  const [selectedTopicIndex, setSelectedTopicIndex] = useState(null);
+  const [numberOfExercises, setNumberOfExercises] = useState(1);
 
-  const handleAddExercise = () => {
-    if (currentExercise.content) {
-      const updatedTopics = [...courseData.topics];
-      updatedTopics[selectedTopicIndex].exercises.push({ ...currentExercise });
-      setCourseData((prev) => ({ ...prev, topics: updatedTopics }));
-      setCurrentExercise({ content: "" });
-    }
+  const handleTopicChange = (e) => {
+    setSelectedTopicIndex(Number(e.target.value));
+    setNumberOfExercises(1);
+  };
+
+  const selectedTopic =
+    selectedTopicIndex !== null ? courseData.topics[selectedTopicIndex] : null;
+  const availableExerciseNumbers = selectedTopic
+    ? calculateFactors(selectedTopic.points)
+    : [];
+  const pointsPerExercise = selectedTopic
+    ? selectedTopic.points / numberOfExercises
+    : 0;
+
+  const handleExerciseNumberChange = (e) => {
+    const newExerciseCount = parseInt(e.target.value);
+    setNumberOfExercises(newExerciseCount);
+
+    const newExercises = Array(newExerciseCount)
+      .fill(null)
+      .map((_, index) => ({
+        content: `Exercise ${index + 1}`,
+        points: pointsPerExercise,
+      }));
+
+    const updatedTopics = [...courseData.topics];
+    updatedTopics[selectedTopicIndex] = {
+      ...updatedTopics[selectedTopicIndex],
+      exercises: newExercises,
+    };
+
+    setCourseData((prev) => ({
+      ...prev,
+      topics: updatedTopics,
+    }));
+  };
+
+  const handleExerciseContentChange = (index, newContent) => {
+    const updatedTopics = [...courseData.topics];
+    updatedTopics[selectedTopicIndex].exercises[index] = {
+      ...updatedTopics[selectedTopicIndex].exercises[index],
+      content: newContent,
+    };
+    setCourseData((prev) => ({
+      ...prev,
+      topics: updatedTopics,
+    }));
   };
 
   return (
@@ -26,45 +67,57 @@ export const ExercisesForm = ({
       <div>
         <Label>Select Topic</Label>
         <select
-          value={selectedTopicIndex}
-          onChange={(e) => setSelectedTopicIndex(Number(e.target.value))}
+          value={selectedTopicIndex ?? ""}
+          onChange={handleTopicChange}
           className="w-full border rounded p-2"
         >
+          <option value="" disabled>
+            Select a topic
+          </option>
           {courseData.topics.map((topic, index) => (
             <option key={index} value={index}>
-              {topic.topicName}
+              {topic.topicName} ({topic.points} points)
             </option>
           ))}
         </select>
       </div>
 
-      <div>
-        <Label>Exercise Content</Label>
-        <TextArea
-          value={currentExercise.content}
-          onChange={(e) => setCurrentExercise({ content: e.target.value })}
-          placeholder="Enter exercise content"
-          className="h-32"
-        />
-        <button
-          onClick={handleAddExercise}
-          disabled={!currentExercise.content}
-          className="mt-2"
-        >
-          Add Exercise
-        </button>
-      </div>
+      {selectedTopic && (
+        <div>
+          <Label>Number of Exercises</Label>
+          <select
+            value={numberOfExercises}
+            onChange={handleExerciseNumberChange}
+            className="w-full border rounded p-2"
+          >
+            {availableExerciseNumbers.map((num) => (
+              <option key={num} value={num}>
+                {num} Exercises ({selectedTopic.points / num} points each)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-      {/* Display exercises for selected topic */}
-      <div className="mt-4">
-        {courseData.topics[selectedTopicIndex]?.exercises.map(
-          (exercise, index) => (
-            <div key={index} className="p-3 bg-gray-50 rounded-lg mb-2">
-              {exercise.content}
+      {selectedTopic && selectedTopic.exercises && (
+        <div className="mt-4 space-y-4">
+          {selectedTopic.exercises.map((exercise, index) => (
+            <div key={index} className="space-y-2">
+              <Label>
+                Exercise {index + 1} ({exercise.points} points)
+              </Label>
+              <TextArea
+                value={exercise.content}
+                onChange={(e) =>
+                  handleExerciseContentChange(index, e.target.value)
+                }
+                placeholder={`Enter content for Exercise ${index + 1}`}
+                className="h-32"
+              />
             </div>
-          )
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex justify-between mt-6">
         <button
@@ -78,7 +131,11 @@ export const ExercisesForm = ({
           onClick={onSave}
           disabled={
             loading ||
-            courseData.topics.some((topic) => topic.exercises.length === 0)
+            courseData.topics.some(
+              (topic) =>
+                topic.exercises.some((exercise) => !exercise.content) ||
+                topic.exercises.length === 0
+            )
           }
           className={`px-4 py-2 rounded ${
             loading
