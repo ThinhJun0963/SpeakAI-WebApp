@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import Header from "../components/dashboard/Header";
-import { userStats, recentActivity } from "../data/dashboardData";
 import { X } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";
-import DashboardPage from "./DashboardHome";
 import { Outlet } from "react-router-dom";
 
 const AdminDashboard = () => {
