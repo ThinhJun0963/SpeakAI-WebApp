@@ -26,7 +26,7 @@ export const useAuth = () => {
       const user = userCredential.user;
       setLoading(false);
       // Có thể chuyển hướng người dùng sau khi đăng nhập thành công
-      // navigate('/dashboard');
+      navigate("/dashboard");
       return user;
     } catch (err) {
       setLoading(false);
@@ -49,7 +49,7 @@ export const useAuth = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       setLoading(false);
-      // navigate('/dashboard');
+      navigate("/dashboard");
       return user;
     } catch (err) {
       setLoading(false);

@@ -10,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<AdminPage />}>
-          <Route index element={<DashboardHome />} />
+          <Route path="/dashboard" element={<DashboardHome />} />
           <Route path="/courses" element={<CoursePage />} />
         </Route>
       </Routes>
