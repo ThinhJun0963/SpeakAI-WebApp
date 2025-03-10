@@ -1,14 +1,8 @@
-import api from "./api";
+// src/api/courseService.js
+import axiosInstance from "../api/axiosInstance";
 
 export const courseService = {
-  getAll: () => api.get("/Course/get-all"),
-  getById: (id) => api.get(`/Course/${id}`),
-  // create: (data) => api.post("/Course", data),
-  create: (courseData) =>
-    api.post("/Course", {
-      ...courseData,
-      isPremium: !courseData.isFree, // Thêm isPremium dựa vào isFree
-    }),
-  update: (id, data) => api.put(`/Course/${id}`, data),
-  delete: (id) => api.delete(`/Course/${id}`),
+  getAll: () => axiosInstance.get("/courses"),
+  create: (courseData) => axiosInstance.post("/courses", courseData),
+  delete: (id) => axiosInstance.delete(`/courses/${id}`),
 };

@@ -1,36 +1,27 @@
+// src/pages/CoursePage.jsx
 import React, { useState } from "react";
 import CourseList from "../../components/course/CourseList/CourseList";
 import { CourseCreationSteps } from "../../components/course/CourseCreationSteps";
+import { Button } from "antd";
 
 const CoursePage = () => {
   const [isCreating, setIsCreating] = useState(false);
-
-  const handleCourseCreate = (courseData) => {
-    console.log("Created course:", courseData);
-    setIsCreating(false);
-  };
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Course Management</h1>
-        <button
-          onClick={() => setIsCreating(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-        >
+        <Button type="primary" onClick={() => setIsCreating(true)}>
           Create Course
-        </button>
+        </Button>
       </div>
-
       {isCreating ? (
         <CourseCreationSteps
-          onComplete={handleCourseCreate}
+          onComplete={() => setIsCreating(false)}
           onCancel={() => setIsCreating(false)}
         />
       ) : (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <CourseList />
-        </div>
+        <CourseList />
       )}
     </div>
   );

@@ -1,89 +1,69 @@
+// src/components/course/TopicsForm.jsx
 import React, { useState } from "react";
-import { Input } from "../ui/Input";
+import { Button, Input, Select } from "antd";
 import { calculateFactors } from "../../utils/calculations";
-import Label from "../ui/Label";
+
+const { Option } = Select;
 
 export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
   const [numberOfTopics, setNumberOfTopics] = useState(1);
-
   const availableTopicNumbers = calculateFactors(courseData.maxPoint);
-  const pointsPerTopic = courseData.maxPoint / numberOfTopics;
 
-  const handleTopicNumberChange = (e) => {
-    const newTopicCount = parseInt(e.target.value);
+  const handleTopicNumberChange = (value) => {
+    const newTopicCount = value;
     setNumberOfTopics(newTopicCount);
-
     const newTopics = Array(newTopicCount)
       .fill(null)
       .map((_, index) => ({
         topicName: `Topic ${index + 1}`,
-        points: pointsPerTopic,
         exercises: [],
       }));
-
-    setCourseData((prev) => ({
-      ...prev,
-      topics: newTopics,
-    }));
+    setCourseData((prev) => ({ ...prev, topics: newTopics }));
   };
 
   const handleTopicNameChange = (index, newName) => {
     const updatedTopics = [...courseData.topics];
-    updatedTopics[index] = {
-      ...updatedTopics[index],
-      topicName: newName,
-    };
-    setCourseData((prev) => ({
-      ...prev,
-      topics: updatedTopics,
-    }));
+    updatedTopics[index] = { ...updatedTopics[index], topicName: newName };
+    setCourseData((prev) => ({ ...prev, topics: updatedTopics }));
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <Label>Number of Topics</Label>
-        <select
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Number of Topics
+        </label>
+        <Select
           value={numberOfTopics}
           onChange={handleTopicNumberChange}
-          className="w-full border rounded p-2"
+          style={{ width: "100%" }}
         >
           {availableTopicNumbers.map((num) => (
-            <option key={num} value={num}>
-              {num} Topics ({courseData.maxPoint / num} points each)
-            </option>
+            <Option key={num} value={num}>
+              {num} Topics
+            </Option>
           ))}
-        </select>
+        </Select>
       </div>
-
-      <div className="mt-4 space-y-4">
+      <div className="space-y-4">
         {courseData.topics.map((topic, index) => (
-          <div key={index} className="flex gap-4 items-center">
-            <Input
-              value={topic.topicName}
-              onChange={(e) => handleTopicNameChange(index, e.target.value)}
-              placeholder={`Topic ${index + 1} Name`}
-              className="flex-1"
-            />
-            <span className="text-sm text-gray-500">{topic.points} points</span>
-          </div>
+          <Input
+            key={index}
+            value={topic.topicName}
+            onChange={(e) => handleTopicNameChange(index, e.target.value)}
+            placeholder={`Topic ${index + 1} Name`}
+          />
         ))}
       </div>
-
-      <div className="flex justify-between mt-6">
-        <button
-          onClick={onPrev}
-          className="px-4 py-2 border rounded hover:bg-gray-100"
-        >
-          Previous
-        </button>
-        <button
+      <div className="flex justify-between">
+        <Button onClick={onPrev}>Previous</Button>
+        <Button
+          type="primary"
           onClick={onNext}
-          disabled={courseData.topics.some((topic) => !topic.topicName)}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+          disabled={courseData.topics.some((t) => !t.topicName)}
         >
           Next
-        </button>
+        </Button>
       </div>
     </div>
   );

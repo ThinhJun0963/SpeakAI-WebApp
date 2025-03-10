@@ -1,7 +1,9 @@
+// src/components/course/ExercisesForm.jsx
 import React, { useState } from "react";
-import { calculateFactors } from "../../utils/calculations";
-import Label from "../ui/Label";
-import TextArea from "../ui/TextArea";
+import { Button, Input, Select } from "antd";
+
+const { TextArea } = Input;
+const { Option } = Select;
 
 export const ExercisesForm = ({
   courseData,
@@ -11,140 +13,81 @@ export const ExercisesForm = ({
   loading,
 }) => {
   const [selectedTopicIndex, setSelectedTopicIndex] = useState(null);
-  const [numberOfExercises, setNumberOfExercises] = useState(1);
 
-  const handleTopicChange = (e) => {
-    setSelectedTopicIndex(Number(e.target.value));
-    setNumberOfExercises(1);
+  const handleTopicChange = (value) => {
+    setSelectedTopicIndex(value);
   };
 
   const selectedTopic =
     selectedTopicIndex !== null ? courseData.topics[selectedTopicIndex] : null;
-  const availableExerciseNumbers = selectedTopic
-    ? calculateFactors(selectedTopic.points)
-    : [];
-  const pointsPerExercise = selectedTopic
-    ? selectedTopic.points / numberOfExercises
-    : 0;
-
-  const handleExerciseNumberChange = (e) => {
-    const newExerciseCount = parseInt(e.target.value);
-    setNumberOfExercises(newExerciseCount);
-
-    const newExercises = Array(newExerciseCount)
-      .fill(null)
-      .map((_, index) => ({
-        content: `Exercise ${index + 1}`,
-        points: pointsPerExercise,
-      }));
-
-    const updatedTopics = [...courseData.topics];
-    updatedTopics[selectedTopicIndex] = {
-      ...updatedTopics[selectedTopicIndex],
-      exercises: newExercises,
-    };
-
-    setCourseData((prev) => ({
-      ...prev,
-      topics: updatedTopics,
-    }));
-  };
 
   const handleExerciseContentChange = (index, newContent) => {
     const updatedTopics = [...courseData.topics];
     updatedTopics[selectedTopicIndex].exercises[index] = {
-      ...updatedTopics[selectedTopicIndex].exercises[index],
       content: newContent,
     };
-    setCourseData((prev) => ({
-      ...prev,
-      topics: updatedTopics,
-    }));
+    setCourseData((prev) => ({ ...prev, topics: updatedTopics }));
+  };
+
+  const addExercise = () => {
+    const updatedTopics = [...courseData.topics];
+    updatedTopics[selectedTopicIndex].exercises.push({ content: "" });
+    setCourseData((prev) => ({ ...prev, topics: updatedTopics }));
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <Label>Select Topic</Label>
-        <select
-          value={selectedTopicIndex ?? ""}
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Select Topic
+        </label>
+        <Select
+          value={selectedTopicIndex}
           onChange={handleTopicChange}
-          className="w-full border rounded p-2"
+          placeholder="Select a topic"
+          style={{ width: "100%" }}
         >
-          <option value="" disabled>
-            Select a topic
-          </option>
           {courseData.topics.map((topic, index) => (
-            <option key={index} value={index}>
-              {topic.topicName} ({topic.points} points)
-            </option>
+            <Option key={index} value={index}>
+              {topic.topicName}
+            </Option>
           ))}
-        </select>
+        </Select>
       </div>
-
       {selectedTopic && (
-        <div>
-          <Label>Number of Exercises</Label>
-          <select
-            value={numberOfExercises}
-            onChange={handleExerciseNumberChange}
-            className="w-full border rounded p-2"
-          >
-            {availableExerciseNumbers.map((num) => (
-              <option key={num} value={num}>
-                {num} Exercises ({selectedTopic.points / num} points each)
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {selectedTopic && selectedTopic.exercises && (
-        <div className="mt-4 space-y-4">
+        <div className="space-y-4">
           {selectedTopic.exercises.map((exercise, index) => (
-            <div key={index} className="space-y-2">
-              <Label>
-                Exercise {index + 1} ({exercise.points} points)
-              </Label>
+            <div key={index}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Exercise {index + 1}
+              </label>
               <TextArea
                 value={exercise.content}
                 onChange={(e) =>
                   handleExerciseContentChange(index, e.target.value)
                 }
                 placeholder={`Enter content for Exercise ${index + 1}`}
-                className="h-32"
+                rows={4}
               />
             </div>
           ))}
+          <Button onClick={addExercise}>Add Exercise</Button>
         </div>
       )}
-
       <div className="flex justify-between mt-6">
-        <button
-          onClick={onPrev}
-          disabled={loading}
-          className="px-4 py-2 border rounded hover:bg-gray-100"
-        >
+        <Button onClick={onPrev} disabled={loading}>
           Previous
-        </button>
-        <button
+        </Button>
+        <Button
+          type="primary"
           onClick={onSave}
           disabled={
-            loading ||
-            courseData.topics.some(
-              (topic) =>
-                topic.exercises.some((exercise) => !exercise.content) ||
-                topic.exercises.length === 0
-            )
+            loading || !courseData.topics.every((t) => t.exercises.length > 0)
           }
-          className={`px-4 py-2 rounded ${
-            loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600 text-white"
-          }`}
+          loading={loading}
         >
-          {loading ? "Creating..." : "Save Course"}
-        </button>
+          Save Course
+        </Button>
       </div>
     </div>
   );

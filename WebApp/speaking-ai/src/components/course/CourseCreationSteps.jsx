@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { CourseForm } from "./CourseForm";
-import { TopicsForm } from "./TopicForm";
-import { ExercisesForm } from "./ExerciseForm";
+import { TopicsForm } from "./TopicForm"; // Sửa tên file import
+import { ExercisesForm } from "./ExerciseForm"; // Sửa tên file import
 import { StepIndicator } from "./StepIndicator";
-import { useCourseCreation } from "../hooks/useCourseCreation";
+import { courseApi } from "../../api/axiosInstance"; // Cập nhật import
+import { Card } from "antd";
 
 export const CourseCreationSteps = ({ onComplete, onCancel }) => {
   const [step, setStep] = useState(1);
@@ -12,70 +13,62 @@ export const CourseCreationSteps = ({ onComplete, onCancel }) => {
     description: "",
     maxPoint: 90,
     isFree: true,
+    isPremium: false,
     levelId: 1,
     topics: [],
   });
-
-  const { createCourse, loading, error } = useCourseCreation(onComplete);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleNext = () => setStep((prev) => prev + 1);
   const handlePrev = () => setStep((prev) => prev - 1);
 
   const handleSave = async () => {
+    setLoading(true);
     try {
-      await createCourse(courseData);
-    } catch (error) {
-      console.error("Failed to create course:", error);
-      // Có thể hiển thị thông báo lỗi ở đây
+      await courseApi.create(courseData); // Cập nhật courseApi
+      onComplete();
+    } catch (err) {
+      setError(err.message || "Failed to create course");
+    } finally {
+      setLoading(false);
     }
   };
 
   if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-        <strong className="font-bold">Error!</strong>
-        <span className="block sm:inline"> {error}</span>
-        <button
-          onClick={() => window.location.reload()}
-          className="ml-4 text-red-700 hover:text-red-900"
-        >
-          Try Again
-        </button>
-      </div>
-    );
+    return <div className="text-red-500 text-center py-10">{error}</div>;
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <StepIndicator currentStep={step} />
-
-      {step === 1 && (
-        <CourseForm
-          courseData={courseData}
-          setCourseData={setCourseData}
-          onNext={handleNext}
-          onCancel={onCancel}
-        />
-      )}
-
-      {step === 2 && (
-        <TopicsForm
-          courseData={courseData}
-          setCourseData={setCourseData}
-          onNext={handleNext}
-          onPrev={handlePrev}
-        />
-      )}
-
-      {step === 3 && (
-        <ExercisesForm
-          courseData={courseData}
-          setCourseData={setCourseData}
-          onPrev={handlePrev}
-          onSave={handleSave}
-          loading={loading}
-        />
-      )}
-    </div>
+    <Card>
+      <div className="p-6">
+        <StepIndicator currentStep={step} />
+        {step === 1 && (
+          <CourseForm
+            courseData={courseData}
+            setCourseData={setCourseData}
+            onNext={handleNext}
+            onCancel={onCancel}
+          />
+        )}
+        {step === 2 && (
+          <TopicsForm
+            courseData={courseData}
+            setCourseData={setCourseData}
+            onNext={handleNext}
+            onPrev={handlePrev}
+          />
+        )}
+        {step === 3 && (
+          <ExercisesForm
+            courseData={courseData}
+            setCourseData={setCourseData}
+            onPrev={handlePrev}
+            onSave={handleSave}
+            loading={loading}
+          />
+        )}
+      </div>
+    </Card>
   );
 };

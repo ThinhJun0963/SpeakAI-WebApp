@@ -1,54 +1,46 @@
 import React, { useEffect } from "react";
-import CourseCard from "./CourseCard";
-import useApi from "../../hooks/useApi";
-import { courseService } from "../../../services/courseService";
+import CourseCard from "../CourseList/CourseCard";
+import useApi from "../../../components/hooks/useApi";
+import { courseApi } from "../../../api/axiosInstance"; // Cập nhật import
+import { Card } from "antd";
 
 const CourseList = () => {
   const { data: courses, loading, error, execute } = useApi([]);
 
-  const fetchCourses = async () => {
-    try {
-      await execute(courseService.getAll);
-    } catch (err) {
-      console.error("Failed to fetch courses:", err);
-    }
-  };
-
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    execute(courseApi.getAll)
+      .then((result) => console.log("API result:", result))
+      .catch((err) => console.error("API error:", err));
+  }, [execute]);
+
+  console.log("Rendering CourseList with courses:", courses);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    console.log("Returning loading state");
+    return <div className="text-center py-10">Loading...</div>;
   }
-
   if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-        <strong className="font-bold">Error!</strong>
-        <span className="block sm:inline"> {error}</span>
-      </div>
-    );
+    console.log("Returning error state:", error);
+    return <div className="text-red-500 text-center py-10">{error}</div>;
+  }
+  if (!Array.isArray(courses) || courses.length === 0) {
+    console.log("Returning no courses state, courses:", courses);
+    return <div className="text-center py-10">No courses available</div>;
   }
 
-  if (!courses?.length) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-gray-500 text-lg">No courses available</p>
-      </div>
-    );
-  }
-
+  console.log("Rendering courses list:", courses);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {courses.map((course) => (
-        <CourseCard key={course.id} course={course} onRefresh={fetchCourses} />
-      ))}
-    </div>
+    <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+        {courses.map((course) => (
+          <CourseCard
+            key={course.id}
+            course={course}
+            onRefresh={() => execute(courseApi.getAll)} // Cập nhật courseApi
+          />
+        ))}
+      </div>
+    </Card>
   );
 };
 

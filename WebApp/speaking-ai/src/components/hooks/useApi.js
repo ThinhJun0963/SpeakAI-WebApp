@@ -5,29 +5,29 @@ const useApi = (initialData = null) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const execute = useCallback(async (apiFunction) => {
+  const execute = useCallback(async (apiCall, ...args) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const response = await apiFunction();
-      setData(response.data.result);
-      return response.data.result;
+      const response = await apiCall(...args);
+      console.log("Raw response in useApi:", response); // Thêm log để debug
+      const result =
+        response && response.data !== undefined
+          ? response.data
+          : response || [];
+      const finalData = Array.isArray(result) ? result : [];
+      setData(finalData);
+      return finalData;
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || err.message || "An error occurred";
-      setError(errorMessage);
+      const message = err.message || "An error occurred";
+      setError(message);
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  return {
-    data,
-    loading,
-    error,
-    execute,
-  };
+  return { data, loading, error, execute };
 };
 
 export default useApi;
