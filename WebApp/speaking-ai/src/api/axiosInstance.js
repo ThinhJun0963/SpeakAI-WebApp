@@ -2,7 +2,11 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://sai.runasp.net/api",
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    (window.location.hostname.includes("vercel.app")
+      ? "/api"
+      : "http://sai.runasp.net/api"),
   headers: {
     "Content-Type": "application/json",
   },
