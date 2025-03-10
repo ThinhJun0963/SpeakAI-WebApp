@@ -1,8 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd WebApp/speaking-ai && npm install && npm run build",
+  "outputDirectory": "WebApp/speaking-ai/dist",
+  "installCommand": "cd WebApp/speaking-ai && npm install",
   "framework": "vite"
 }
