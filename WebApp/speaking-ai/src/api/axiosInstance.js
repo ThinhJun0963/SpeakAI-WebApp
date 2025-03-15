@@ -26,6 +26,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response.data.result || response.data,
   (error) => {
+    console.log("Raw error from server:", error.response);
     const message = error.response?.data?.message || "Something went wrong";
     return Promise.reject(new Error(message));
   }

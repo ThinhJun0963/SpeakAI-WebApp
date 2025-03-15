@@ -1,11 +1,18 @@
-// src/pages/CoursePage.jsx
 import React, { useState } from "react";
 import CourseList from "../../components/course/CourseList/CourseList";
-import { CourseCreationSteps } from "../../components/course/CourseCreationSteps";
+import CreateCoursePage from "./CreateCoursePage";
 import { Button } from "antd";
 
 const CoursePage = () => {
   const [isCreating, setIsCreating] = useState(false);
+
+  const handleCourseCreated = () => {
+    setIsCreating(false);
+  };
+
+  const handleCancel = () => {
+    setIsCreating(false);
+  };
 
   return (
     <div className="p-6">
@@ -16,12 +23,14 @@ const CoursePage = () => {
         </Button>
       </div>
       {isCreating ? (
-        <CourseCreationSteps
-          onComplete={() => setIsCreating(false)}
-          onCancel={() => setIsCreating(false)}
+        <CreateCoursePage
+          onComplete={handleCourseCreated}
+          onCancel={handleCancel}
         />
       ) : (
-        <CourseList />
+        <CourseList
+          onRefresh={() => console.log("Refreshed from CoursePage")}
+        />
       )}
     </div>
   );
