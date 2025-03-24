@@ -1,32 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react"; // Thêm memo
 import { Menu, X } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/dashboard/Header";
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 
+// Memo hóa Outlet để tránh re-render không cần thiết
+const MemoizedOutlet = memo(
+  () => <Outlet />,
+  () => true
+);
+
 const AdminPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile sidebar toggle */}
       <MobileToggle sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      {/* Sidebar */}
       <motion.div
         initial={{ x: -256 }}
         animate={{ x: sidebarOpen ? 0 : -256 }}
         transition={{ duration: 0.3 }}
         className="fixed lg:static z-40"
       >
-        <Sidebar />
+        <Sidebar
+          isCollapsed={!sidebarOpen}
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        />
       </motion.div>
 
-      {/* Main content */}
       <div
         className={`flex-1 overflow-auto transition-all duration-300 ${
-          sidebarOpen ? "lg:ml-64" : "ml-0"
+          sidebarOpen ? "lg:ml-64" : "lg:ml-16"
         }`}
       >
         <Header />
@@ -36,7 +42,7 @@ const AdminPage = () => {
           transition={{ duration: 0.5 }}
           className="pt-16 p-6 min-h-screen overflow-auto"
         >
-          <Outlet />
+          <MemoizedOutlet /> {/* Sử dụng phiên bản memo hóa */}
         </motion.main>
       </div>
     </div>

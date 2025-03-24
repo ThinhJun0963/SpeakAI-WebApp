@@ -1,24 +1,22 @@
 import React from "react";
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Bell } from "lucide-react";
 
 const Header = () => {
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-30">
-      <div className="flex items-center justify-between h-16 px-6">
-        <div className="flex items-center flex-1"></div>
+    <header className="bg-white shadow-sm p-4 fixed top-0 w-full z-30">
+      <div className="flex justify-between items-center max-w-7xl mx-auto">
+        <div />
         <div className="flex items-center space-x-4">
-          <button className="relative p-1 text-gray-400 hover:text-blue-500 focus:outline-none">
-            <Bell size={20} />
-            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-          </button>
-
-          <div className="hidden md:flex items-center">
-            <span className="text-sm font-medium text-gray-700 mr-2">
-              Welcome, Admin
-            </span>
-            <button className="flex items-center text-gray-600 hover:text-blue-600">
-              <ChevronDown size={16} />
-            </button>
+          <div className="relative">
+            <Bell className="h-6 w-6 text-gray-600 cursor-pointer transition-transform duration-300 hover:scale-110" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 hover:scale-110"></span>
+          </div>
+          <div className="flex items-center space-x-2 cursor-pointer transition-transform duration-300 hover:scale-105">
+            <img
+              alt="Admin"
+              className="h-8 w-8 rounded-full transition-transform duration-300 hover:scale-110"
+            />
+            <span className="font-medium">Admin</span>
           </div>
         </div>
       </div>
