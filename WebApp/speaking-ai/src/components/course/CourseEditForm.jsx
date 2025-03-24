@@ -1,92 +1,65 @@
-import React, { useEffect } from "react";
-import { Button, Input, Select, Checkbox, Modal, Form } from "antd";
+import React from "react";
 import { courseApi } from "../../api/axiosInstance";
+import { Form, Input, Select, Button, Modal, message } from "antd";
 
 const { Option } = Select;
 
-const POINT_OPTIONS = [100, 200, 300, 400, 500];
-const LEVEL_OPTIONS = [
-  { value: 1, label: "Beginner" },
-  { value: 2, label: "Intermediate" },
-  { value: 3, label: "Advanced" },
-];
-
 const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = React.useState(false);
+  const maxPointOptions = [100, 200, 300, 400, 500];
+  const levelOptions = [
+    { id: 1, name: "Beginner" },
+    { id: 2, name: "Intermediate" },
+    { id: 3, name: "Advanced" },
+  ];
 
-  useEffect(() => {
-    if (visible && course) {
-      form.setFieldsValue({
-        courseName: course.courseName,
-        description: course.description,
-        maxPoint: course.maxPoint,
-        isFree: course.isFree ?? true,
-        levelId: course.levelId,
-      });
-    }
-  }, [visible, course, form]);
-
-  const handleSubmit = async (values) => {
-    setLoading(true);
+  const handleFinish = async (values) => {
     try {
-      const updatedCourse = {
+      await courseApi.update(course.id, {
         courseName: values.courseName,
         description: values.description,
         maxPoint: values.maxPoint,
         isFree: values.isFree,
+        isPremium: values.isPremium,
         levelId: values.levelId,
-      };
-      await courseApi.update(course.id, updatedCourse);
-      onSuccess(updatedCourse.isFree);
-      form.resetFields();
-    } catch (error) {
-      Modal.error({
-        title: "Update Failed",
-        content: "Failed to update the course. Please try again.",
       });
-    } finally {
-      setLoading(false);
+      message.success("Course updated successfully"); // Thêm thông báo thành công
+      onSuccess(); // Gọi onSuccess để đóng form và quay lại trang list
+    } catch (error) {
+      Modal.error({ title: "Error", content: "Failed to update course." });
     }
   };
 
   return (
-    <Modal
-      title="Edit Course"
-      open={visible}
-      onCancel={onCancel}
-      footer={null}
-      width={600}
-    >
+    <Modal title="Edit Course" open={visible} onCancel={onCancel} footer={null}>
       <Form
         form={form}
         layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={{ isFree: true }}
+        initialValues={course}
+        onFinish={handleFinish}
+        className="space-y-4"
       >
         <Form.Item
           name="courseName"
           label="Course Name"
-          rules={[{ required: true, message: "Please enter the course name" }]}
+          rules={[{ required: true, message: "Please enter course name" }]}
         >
           <Input placeholder="Enter course name" />
         </Form.Item>
         <Form.Item
           name="description"
           label="Description"
-          rules={[
-            { required: true, message: "Please enter the course description" },
-          ]}
+          rules={[{ required: true, message: "Please enter description" }]}
         >
-          <Input.TextArea rows={4} placeholder="Enter course description" />
+          <Input.TextArea placeholder="Enter description" rows={4} />
         </Form.Item>
         <Form.Item
           name="maxPoint"
-          label="Maximum Points"
-          rules={[{ required: true, message: "Please select maximum points" }]}
+          label="Max Points"
+          rules={[{ required: true, message: "Please select max points" }]}
         >
-          <Select placeholder="Select maximum points">
-            {POINT_OPTIONS.map((point) => (
+          <Select placeholder="Select max points">
+            {maxPointOptions.map((point) => (
               <Option key={point} value={point}>
                 {point}
               </Option>
@@ -96,30 +69,38 @@ const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
         <Form.Item
           name="levelId"
           label="Level"
-          rules={[{ required: true, message: "Please select course level" }]}
+          rules={[{ required: true, message: "Please select level" }]}
         >
-          <Select placeholder="Select course level">
-            {LEVEL_OPTIONS.map((option) => (
-              <Option key={option.value} value={option.value}>
-                {option.label}
+          <Select placeholder="Select level">
+            {levelOptions.map((level) => (
+              <Option key={level.id} value={level.id}>
+                {level.name}
               </Option>
             ))}
           </Select>
         </Form.Item>
-        <Form.Item name="isFree" valuePropName="checked">
-          <Checkbox>Free</Checkbox>
+        <Form.Item name="isFree" label="Free Course" valuePropName="checked">
+          <Select placeholder="Is this course free?">
+            <Option value={true}>Yes</Option>
+            <Option value={false}>No</Option>
+          </Select>
         </Form.Item>
-        <Form.Item className="flex justify-end mt-6">
-          <Button
-            type="default"
-            onClick={onCancel}
-            disabled={loading}
-            style={{ marginRight: 8 }}
-          >
-            Cancel
+        <Form.Item
+          name="isPremium"
+          label="Premium Course"
+          valuePropName="checked"
+        >
+          <Select placeholder="Is this course premium?">
+            <Option value={true}>Yes</Option>
+            <Option value={false}>No</Option>
+          </Select>
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            Save
           </Button>
-          <Button type="primary" htmlType="submit" loading={loading}>
-            Update Course
+          <Button onClick={onCancel} className="ml-2">
+            Cancel
           </Button>
         </Form.Item>
       </Form>
