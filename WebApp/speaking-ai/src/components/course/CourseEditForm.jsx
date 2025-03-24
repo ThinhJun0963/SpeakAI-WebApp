@@ -1,17 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Button, Input, Select, Checkbox, Modal, Form, Tag } from "antd";
+import React, { useEffect } from "react";
+import { Button, Input, Select, Checkbox, Modal, Form } from "antd";
 import { courseApi } from "../../api/axiosInstance";
 
 const { Option } = Select;
 
-const POINT_OPTIONS = [
-  { value: 100, label: "100 points" },
-  { value: 200, label: "200 points" },
-  { value: 300, label: "300 points" },
-  { value: 400, label: "400 points" },
-  { value: 500, label: "500 points" },
-];
-
+const POINT_OPTIONS = [100, 200, 300, 400, 500];
 const LEVEL_OPTIONS = [
   { value: 1, label: "Beginner" },
   { value: 2, label: "Intermediate" },
@@ -20,26 +13,15 @@ const LEVEL_OPTIONS = [
 
 const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   useEffect(() => {
     if (visible && course) {
-      const isFree = course.isFree !== undefined ? course.isFree : true;
-      const isPremium =
-        course.isPremium !== undefined ? course.isPremium : false;
-      console.log(
-        "Initial course data:",
-        course,
-        "isFree:",
-        isFree,
-        "isPremium:",
-        isPremium
-      );
       form.setFieldsValue({
         courseName: course.courseName,
         description: course.description,
         maxPoint: course.maxPoint,
-        isFree: isFree, // Đồng bộ isFree từ course
+        isFree: course.isFree ?? true,
         levelId: course.levelId,
       });
     }
@@ -52,16 +34,13 @@ const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
         courseName: values.courseName,
         description: values.description,
         maxPoint: values.maxPoint,
-        isFree: values.isFree, // Gửi isFree như người dùng chọn
+        isFree: values.isFree,
         levelId: values.levelId,
       };
-      console.log("Data sent to update API:", updatedCourse);
       await courseApi.update(course.id, updatedCourse);
-      console.log("Update successful");
-      onSuccess(updatedCourse.isFree); // Truyền isFree để CourseCard cập nhật
+      onSuccess(updatedCourse.isFree);
       form.resetFields();
     } catch (error) {
-      console.error("Failed to update course:", error);
       Modal.error({
         title: "Update Failed",
         content: "Failed to update the course. Please try again.",
@@ -70,8 +49,6 @@ const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
       setLoading(false);
     }
   };
-
-  const isPremium = course?.isPremium !== undefined ? course.isPremium : false;
 
   return (
     <Modal
@@ -85,13 +62,7 @@ const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
-        initialValues={{
-          courseName: "",
-          description: "",
-          maxPoint: 100,
-          isFree: true, // Mặc định Free
-          levelId: 1,
-        }}
+        initialValues={{ isFree: true }}
       >
         <Form.Item
           name="courseName"
@@ -100,7 +71,6 @@ const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
         >
           <Input placeholder="Enter course name" />
         </Form.Item>
-
         <Form.Item
           name="description"
           label="Description"
@@ -110,21 +80,19 @@ const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
         >
           <Input.TextArea rows={4} placeholder="Enter course description" />
         </Form.Item>
-
         <Form.Item
           name="maxPoint"
           label="Maximum Points"
           rules={[{ required: true, message: "Please select maximum points" }]}
         >
           <Select placeholder="Select maximum points">
-            {POINT_OPTIONS.map((option) => (
-              <Option key={option.value} value={option.value}>
-                {option.label}
+            {POINT_OPTIONS.map((point) => (
+              <Option key={point} value={point}>
+                {point}
               </Option>
             ))}
           </Select>
         </Form.Item>
-
         <Form.Item
           name="levelId"
           label="Level"
@@ -138,25 +106,15 @@ const CourseEditForm = ({ course, visible, onCancel, onSuccess }) => {
             ))}
           </Select>
         </Form.Item>
-
-        <Form.Item label="Course Type" style={{ marginBottom: 0 }}>
-          <Form.Item name="isFree" valuePropName="checked" noStyle>
-            <Checkbox disabled={!isPremium}>
-              Free (Uncheck to disable Free status for Premium courses)
-            </Checkbox>
-          </Form.Item>
-          <div style={{ marginTop: 8 }}>
-            {form.getFieldValue("isFree") && <Tag color="#52c41a">Free</Tag>}
-            {isPremium && <Tag color="#faad14">Premium</Tag>}
-          </div>
+        <Form.Item name="isFree" valuePropName="checked">
+          <Checkbox>Free</Checkbox>
         </Form.Item>
-
         <Form.Item className="flex justify-end mt-6">
           <Button
             type="default"
             onClick={onCancel}
-            style={{ marginRight: 8 }}
             disabled={loading}
+            style={{ marginRight: 8 }}
           >
             Cancel
           </Button>

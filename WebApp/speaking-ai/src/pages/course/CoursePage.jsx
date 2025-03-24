@@ -1,13 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { courseApi } from "../../api/axiosInstance";
 import CourseList from "../../components/course/CourseList/CourseList";
 import CreateCoursePage from "./CreateCoursePage";
-import { Button } from "antd";
+import { Button, Spin } from "antd";
 
 const CoursePage = () => {
   const [isCreating, setIsCreating] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const data = await courseApi.getAll();
+      setCourses(data);
+    } catch (error) {
+      console.error("Failed to fetch courses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
 
   const handleCourseCreated = () => {
     setIsCreating(false);
+    fetchCourses();
   };
 
   const handleCancel = () => {
@@ -27,10 +47,10 @@ const CoursePage = () => {
           onComplete={handleCourseCreated}
           onCancel={handleCancel}
         />
+      ) : loading ? (
+        <Spin tip="Loading courses..." />
       ) : (
-        <CourseList
-          onRefresh={() => console.log("Refreshed from CoursePage")}
-        />
+        <CourseList courses={courses} onRefresh={fetchCourses} />
       )}
     </div>
   );

@@ -1,18 +1,6 @@
 import React, { useState } from "react";
 import { courseApi } from "../../api/axiosInstance";
-import {
-  Card,
-  Steps,
-  Form,
-  Input,
-  Select,
-  Checkbox,
-  Button,
-  Alert,
-  Spin,
-  Space,
-  Tag,
-} from "antd";
+import { Card, Steps, Form, Input, Select, Button, Alert, Spin } from "antd";
 
 const { Step } = Steps;
 const { Option } = Select;
@@ -24,8 +12,7 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
     courseName: "",
     description: "",
     maxPoint: null,
-    isFree: true, // Set cứng isFree là true
-    isPremium: false,
+    isFree: true,
     levelId: null,
     topics: [],
   });
@@ -40,14 +27,11 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
     { id: 3, name: "Advanced" },
   ];
 
-  // Hàm lấy các ước số của maxPoint
   const getTopicOptions = (maxPoint) => {
     if (!maxPoint) return [];
     const divisors = [];
     for (let i = 1; i <= maxPoint; i++) {
-      if (maxPoint % i === 0) {
-        divisors.push(i);
-      }
+      if (maxPoint % i === 0) divisors.push(i);
     }
     return divisors;
   };
@@ -66,7 +50,6 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
       setError(null);
       setSuccess(false);
       try {
-        console.log("Final data sent to API:", courseData);
         await courseApi.create(courseData);
         setSuccess(true);
         form.resetFields();
@@ -75,20 +58,13 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
           description: "",
           maxPoint: null,
           isFree: true,
-          isPremium: false,
           levelId: null,
           topics: [],
         });
         setCurrentStep(0);
         onComplete();
       } catch (err) {
-        console.error("Full error in handleNext:", err);
-        const errorDetails = err.response?.data?.errors
-          ? Object.entries(err.response.data.errors)
-              .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-              .join("; ")
-          : err.message || "Failed to create course";
-        setError(errorDetails);
+        setError(err.message || "Failed to create course");
       } finally {
         setLoading(false);
       }
@@ -100,8 +76,7 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
           courseName: formValues.courseName,
           description: formValues.description,
           maxPoint: formValues.maxPoint,
-          isFree: true, // Set cứng isFree là true
-          isPremium: formValues.isPremium || false,
+          isFree: formValues.isFree ?? true,
           levelId: formValues.levelId,
         }));
       } else if (currentStep === 1) {
@@ -119,11 +94,8 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
   };
 
   const handleBack = () => {
-    if (currentStep === 0) {
-      onCancel();
-    } else {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep === 0) onCancel();
+    else setCurrentStep(currentStep - 1);
   };
 
   const handleTopicChange = (index, field, value) => {
@@ -154,13 +126,7 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
             form={form}
             layout="vertical"
             onFinish={handleNext}
-            initialValues={{
-              courseName: courseData.courseName,
-              description: courseData.description,
-              maxPoint: courseData.maxPoint,
-              isPremium: courseData.isPremium,
-              levelId: courseData.levelId,
-            }}
+            initialValues={{ isFree: true }}
           >
             <Form.Item
               name="courseName"
@@ -204,10 +170,8 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item label="Course Type" style={{ marginBottom: 0 }}>
-              <Form.Item name="isPremium" valuePropName="checked" noStyle>
-                <Checkbox style={{ marginLeft: 16 }}>Premium</Checkbox>
-              </Form.Item>
+            <Form.Item name="isFree" valuePropName="checked">
+              <Checkbox>Free</Checkbox>
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" block>
@@ -253,12 +217,7 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
                   title={`Topic ${index + 1} (${topicPoints} points)`}
                   className="mb-4"
                 >
-                  <Form.Item
-                    label="Topic Name"
-                    rules={[
-                      { required: true, message: "Please enter topic name" },
-                    ]}
-                  >
+                  <Form.Item label="Topic Name">
                     <Input
                       value={topic.topicName}
                       onChange={(e) =>
@@ -285,12 +244,6 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
                     <Form.Item
                       key={exIndex}
                       label={`Exercise ${exIndex + 1} Content`}
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please enter exercise content",
-                        },
-                      ]}
                     >
                       <Input
                         value={exercise.content}
@@ -344,11 +297,9 @@ const CreateCoursePage = ({ onComplete, onCancel }) => {
         />
       )}
       {renderStepContent()}
-      <Space>
-        <Button onClick={handleBack} disabled={loading}>
-          {currentStep === 0 ? "Cancel" : "Back"}
-        </Button>
-      </Space>
+      <Button onClick={handleBack} disabled={loading}>
+        {currentStep === 0 ? "Cancel" : "Back"}
+      </Button>
     </Card>
   );
 };
