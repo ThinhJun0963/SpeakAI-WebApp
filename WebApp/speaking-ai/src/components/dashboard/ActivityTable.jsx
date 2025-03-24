@@ -34,9 +34,6 @@ const ActivityTable = ({ recentActivity }) => {
                     Topic
                   </th>
                   <th className="px-6 py-4 text-sm font-medium text-gray-500">
-                    Time
-                  </th>
-                  <th className="px-6 py-4 text-sm font-medium text-gray-500">
                     Status
                   </th>
                 </tr>
@@ -52,9 +49,6 @@ const ActivityTable = ({ recentActivity }) => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {activity.scenario}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {activity.time}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span
