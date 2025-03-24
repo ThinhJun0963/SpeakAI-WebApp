@@ -1,12 +1,15 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useNavigate, useParams } from "react-router-dom"; // Đã có nhưng đảm bảo import đầy đủ
+import { useNavigate, useParams } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import DashboardHome from "./pages/DashboardHome";
 import CoursePage from "./pages/course/CoursePage";
 import CreateCoursePage from "./pages/course/CreateCoursePage";
 import CourseEditForm from "./components/course/CourseEditForm";
-import { courseApi } from "./api/axiosInstance"; // Thêm import courseApi
+import VoucherPage from "./pages/voucher/VoucherPage";
+import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
+import VoucherEditForm from "./pages/voucher/VoucherEditForm";
+import { courseApi, voucherApi } from "./api/axiosInstance";
 import { useState, useEffect } from "react";
 
 function App() {
@@ -27,6 +30,20 @@ function App() {
             }
           />
           <Route path="/courses/edit/:id" element={<CourseEditFormWrapper />} />
+          <Route path="/vouchers" element={<VoucherPage />} />
+          <Route
+            path="/vouchers/create"
+            element={
+              <CreateVoucherPage
+                onComplete={() => window.history.back()}
+                onCancel={() => window.history.back()}
+              />
+            }
+          />
+          <Route
+            path="/vouchers/edit/:id"
+            element={<VoucherEditFormWrapper />}
+          />
         </Route>
       </Routes>
     </Router>
@@ -41,7 +58,7 @@ const CourseEditFormWrapper = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const data = await courseApi.getById(id); // Sử dụng courseApi đã import
+        const data = await courseApi.getById(id);
         setCourse(data);
       } catch (error) {
         console.error("Failed to fetch course:", error);
@@ -56,6 +73,33 @@ const CourseEditFormWrapper = () => {
       visible={true}
       onCancel={() => navigate("/courses")}
       onSuccess={() => navigate("/courses")}
+    />
+  );
+};
+
+const VoucherEditFormWrapper = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [voucher, setVoucher] = useState(null);
+
+  useEffect(() => {
+    const fetchVoucher = async () => {
+      try {
+        const data = await voucherApi.getById(id);
+        setVoucher(data);
+      } catch (error) {
+        console.error("Failed to fetch voucher:", error);
+      }
+    };
+    fetchVoucher();
+  }, [id]);
+
+  return (
+    <VoucherEditForm
+      voucher={voucher}
+      visible={true}
+      onCancel={() => navigate("/vouchers")}
+      onSuccess={() => navigate("/vouchers")}
     />
   );
 };

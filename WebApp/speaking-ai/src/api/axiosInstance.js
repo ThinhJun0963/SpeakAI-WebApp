@@ -41,4 +41,13 @@ export const courseApi = {
     axiosInstance.put(`/courses/exercise/${exerciseId}`, exerciseData),
 };
 
+export const voucherApi = {
+  getAll: () => axiosInstance.get("/Voucher"),
+  getById: (id) => axiosInstance.get(`/Voucher/id/${id}`),
+  create: (voucherData) => axiosInstance.post("/Voucher", voucherData),
+  update: (id, voucherData) =>
+    axiosInstance.put(`/Voucher/id/${id}`, voucherData),
+  delete: (id) => axiosInstance.delete(`/Voucher/id/${id}`),
+};
+
 export default axiosInstance;

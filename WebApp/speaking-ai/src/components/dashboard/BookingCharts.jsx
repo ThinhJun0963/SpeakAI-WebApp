@@ -11,95 +11,88 @@ import {
   Pie,
   Cell,
   Legend,
+  BarChart,
+  Bar,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/Card";
 
-// Dữ liệu phiên học theo tháng
-const sessionData = [
-  { month: "Jan", sessions: 65, minutes: 325 },
-  { month: "Feb", sessions: 78, minutes: 390 },
-  { month: "Mar", sessions: 95, minutes: 475 },
-  { month: "Apr", sessions: 110, minutes: 550 },
-  { month: "May", sessions: 88, minutes: 440 },
-  { month: "Jun", sessions: 102, minutes: 510 },
+const COLORS = [
+  "#3B82F6",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#8B5CF6",
+  "#EC4899",
 ];
 
-// Dữ liệu chủ đề luyện nói
-const topicData = [
-  { name: "Giao tiếp cơ bản", value: 150 },
-  { name: "Phỏng vấn việc làm", value: 120 },
-  { name: "Du lịch & nhà hàng", value: 85 },
-  { name: "Thuyết trình", value: 45 },
-];
-
-const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444"];
-
-const LearningCharts = () => {
+const LearningCharts = ({ courses }) => {
   const [activeChart, setActiveChart] = useState(null);
+
+  // Process data for charts
+  const coursesByMonth = courses.reduce((acc, course) => {
+    const month = new Date(course.createdAt).toLocaleString("default", {
+      month: "short",
+    });
+    acc[month] = (acc[month] || 0) + 1;
+    return acc;
+  }, {});
+  const courseCreationData = Object.entries(coursesByMonth).map(
+    ([month, count]) => ({
+      month,
+      courses: count,
+    })
+  );
+
+  const coursesByLevel = courses.reduce((acc, course) => {
+    const level = `Level ${course.levelId}`;
+    acc[level] = (acc[level] || 0) + 1;
+    return acc;
+  }, {});
+  const levelDistributionData = Object.entries(coursesByLevel).map(
+    ([name, value]) => ({
+      name,
+      value,
+    })
+  );
+
+  const premiumVsFreeData = [
+    { name: "Premium", value: courses.filter((c) => c.isPremium).length },
+    { name: "Free", value: courses.filter((c) => !c.isPremium).length },
+  ];
+
+  const maxPointDistribution = courses.reduce((acc, course) => {
+    const range = Math.floor(course.maxPoint / 100) * 100;
+    const label = `${range}-${range + 99}`;
+    acc[label] = (acc[label] || 0) + 1;
+    return acc;
+  }, {});
+  const pointDistributionData = Object.entries(maxPointDistribution).map(
+    ([range, count]) => ({
+      range,
+      courses: count,
+    })
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-      <Card
-        className={`overflow-hidden transition-all duration-300 border border-gray-200 ${
-          activeChart === "line"
-            ? "shadow-lg transform translate-y-[-4px]"
-            : "shadow-sm"
-        }`}
-        onMouseEnter={() => setActiveChart("line")}
-        onMouseLeave={() => setActiveChart(null)}
-      >
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-          <CardTitle className="text-lg font-semibold text-gray-800">
-            Phiên luyện nói theo tháng
-          </CardTitle>
+      {/* Course Creation Over Time */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Courses Created by Month</CardTitle>
         </CardHeader>
-        <CardContent className="px-1 pt-4 pb-6">
+        <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={sessionData}
-                margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  axisLine={{ stroke: "#e0e0e0" }}
-                  tick={{ fill: "#666", fontSize: 12 }}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={{ stroke: "#e0e0e0" }}
-                  tick={{ fill: "#666", fontSize: 12 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "6px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  }}
-                  formatter={(value, name) => [
-                    value,
-                    name === "sessions"
-                      ? "Số phiên luyện nói"
-                      : "Số phút luyện tập",
-                  ]}
-                  labelFormatter={(label) => `Tháng: ${label}`}
-                />
+              <LineChart data={courseCreationData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
                 <Line
                   type="monotone"
-                  dataKey="sessions"
-                  name="Số phiên luyện nói"
+                  dataKey="courses"
                   stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={{
-                    fill: "#3b82f6",
-                    strokeWidth: 2,
-                    r: 4,
-                    stroke: "white",
-                  }}
-                  activeDot={{ r: 6, strokeWidth: 0, fill: "#2563eb" }}
+                  strokeWidth={2}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -107,69 +100,90 @@ const LearningCharts = () => {
         </CardContent>
       </Card>
 
-      <Card
-        className={`overflow-hidden transition-all duration-300 border border-gray-200 ${
-          activeChart === "pie"
-            ? "shadow-lg transform translate-y-[-4px]"
-            : "shadow-sm"
-        }`}
-        onMouseEnter={() => setActiveChart("pie")}
-        onMouseLeave={() => setActiveChart(null)}
-      >
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-          <CardTitle className="text-lg font-semibold text-gray-800">
-            Chủ đề luyện nói phổ biến
-          </CardTitle>
+      {/* Level Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Course Level Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="px-1 pt-4 pb-6">
+        <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={topicData}
+                  data={levelDistributionData}
+                  dataKey="value"
+                  nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={80}
-                  outerRadius={110}
+                  outerRadius={100}
                   fill="#8884d8"
-                  paddingAngle={3}
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
-                  labelLine={{
-                    stroke: "#555",
-                    strokeWidth: 1,
-                    strokeDasharray: "3 3",
-                  }}
+                  label
                 >
-                  {topicData.map((entry, index) => (
+                  {levelDistributionData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
-                      className="transition-opacity duration-300 hover:opacity-90"
                     />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "6px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  }}
-                  formatter={(value) => [`${value} phiên`, "Số lượng"]}
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  height={36}
-                  iconType="circle"
-                  iconSize={10}
-                  formatter={(value) => (
-                    <span className="text-sm text-gray-700">{value}</span>
-                  )}
-                />
+                <Tooltip />
+                <Legend />
               </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Premium vs Free */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Premium vs Free Courses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={premiumVsFreeData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  label
+                >
+                  {premiumVsFreeData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Max Point Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Max Point Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={pointDistributionData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="range" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="courses" fill="#10B981" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </CardContent>

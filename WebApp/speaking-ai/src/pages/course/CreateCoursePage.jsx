@@ -1,262 +1,145 @@
 import React, { useState } from "react";
 import { courseApi } from "../../api/axiosInstance";
-import { Steps, Form, Input, Select, Button, Card, Spin, Alert } from "antd";
+import { Card, Modal } from "antd";
+import { CourseForm } from "../../components/course/CourseForm";
+import { TopicsForm } from "../../components/course/TopicForm";
+import { ExercisesForm } from "../../components/course/ExerciseForm";
+import { StepIndicator } from "../../components/course/StepIndicator";
+import Loader from "../../components/Loader";
 import { motion } from "framer-motion";
 
-const { Step } = Steps;
-const { Option } = Select;
-
-const CreateCoursePage = ({ onComplete, onCancel }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [form] = Form.useForm();
-  const [courseId, setCourseId] = useState(null);
-  const [topics, setTopics] = useState([]);
+export const CreateCoursePage = ({ onComplete, onCancel }) => {
+  const [step, setStep] = useState(1);
+  const [courseData, setCourseData] = useState({
+    courseName: "",
+    description: "",
+    maxPoint: 90,
+    isFree: false,
+    isPremium: false,
+    levelId: 1,
+    topics: [],
+  });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  const maxPointOptions = [100, 200, 300, 400, 500];
-  const levelOptions = [
-    { id: 1, name: "Beginner" },
-    { id: 2, name: "Intermediate" },
-    { id: 3, name: "Advanced" },
-  ];
+  const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
+  const handlePrev = () => setStep((prev) => Math.max(prev - 1, 1));
 
-  const getTopicOptions = (maxPoint) => {
-    const divisors = [];
-    for (let i = 1; i <= maxPoint; i++)
-      if (maxPoint % i === 0) divisors.push(i);
-    return divisors;
-  };
-
-  const getExerciseOptions = (topicPoints) => {
-    const divisors = [];
-    for (let i = 1; i <= topicPoints / 10; i++)
-      if (topicPoints % (i * 10) === 0) divisors.push(i);
-    return divisors;
-  };
-
-  const handleNext = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const values = await form.validateFields();
-      if (currentStep === 0) {
-        const courseData = {
-          courseName: values.courseName,
-          description: values.description,
-          maxPoint: values.maxPoint,
-          isFree: values.isFree ?? true,
-          isPremium: values.isPremium ?? false,
-          levelId: values.levelId,
-          topics: [], // Thêm topics rỗng để khớp với API
-        };
-        const response = await courseApi.create(courseData);
-        setCourseId(response?.id || "temp-id"); // Giả định BE trả ID trong result
-        setCurrentStep(1);
-      } else if (currentStep === 1) {
-        const topicCount = values.topicCount;
-        setTopics(
-          Array.from({ length: topicCount }, () => ({
-            topicName: "",
-            exercises: [],
-          }))
-        );
-        setCurrentStep(2);
-      } else if (currentStep === 2) {
-        for (let i = 0; i < topics.length; i++) {
-          const topicResponse = await courseApi.addTopic(courseId, {
-            topicName: values[`topicName${i}`],
-            exercises: [],
-          });
-          const topicId = topicResponse?.id || `temp-topic-${i}`;
-          const exerciseCount = values[`exerciseCount${i}`];
-          for (let j = 0; j < exerciseCount; j++) {
-            await courseApi.addExercise(topicId, {
-              content: values[`exerciseContent${i}-${j}`],
-            });
-          }
-        }
-        onComplete();
+  const validateStep = (currentStep) => {
+    if (currentStep === 1) {
+      const { courseName, description, maxPoint, levelId } = courseData;
+      if (!courseName || !description || !maxPoint || !levelId) {
+        Modal.error({
+          title: "Validation Error",
+          content: "Please fill in all required fields.",
+        });
+        return false;
       }
+    } else if (currentStep === 2 && courseData.topics.length === 0) {
+      Modal.error({
+        title: "Validation Error",
+        content: "Please add at least one topic.",
+      });
+      return false;
+    } else if (
+      currentStep === 3 &&
+      courseData.topics.some((topic) => topic.exercises.length === 0)
+    ) {
+      Modal.error({
+        title: "Validation Error",
+        content: "Each topic must have at least one exercise.",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validateStep(3)) return;
+
+    setLoading(true);
+    try {
+      const payload = {
+        courseName: courseData.courseName,
+        description: courseData.description,
+        maxPoint: courseData.maxPoint,
+        isFree: courseData.isFree,
+        isPremium: courseData.isPremium,
+        levelId: courseData.levelId,
+        topics: courseData.topics.map((topic) => ({
+          topicName: topic.topicName,
+          maxPoint: topic.maxPoint,
+          exercises: topic.exercises.map((exercise) => ({
+            content: exercise.content,
+            maxPoint: exercise.maxPoint,
+          })),
+        })),
+      };
+
+      const response = await courseApi.create(payload);
+      Modal.success({
+        title: "Success",
+        content: "Course created successfully!",
+        onOk: () => onComplete(response), // Pass the created course back
+      });
     } catch (err) {
-      setError(err.message || "An error occurred");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.errors?.Topics?.[0] ||
+        "Could not create course. Please check your data.";
+      Modal.error({ title: "Error", content: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBack = () => {
-    if (currentStep === 0) onCancel();
-    else setCurrentStep(currentStep - 1);
+  const handleStepChange = (direction) => {
+    if (direction === "next" && !validateStep(step)) return;
+    direction === "next" ? handleNext() : handlePrev();
   };
-
-  const steps = [
-    {
-      title: "Course Info",
-      content: (
-        <Form form={form} layout="vertical" className="space-y-4">
-          <Form.Item
-            name="courseName"
-            label="Course Name"
-            rules={[{ required: true, message: "Please enter course name" }]}
-          >
-            <Input placeholder="Enter course name" />
-          </Form.Item>
-          <Form.Item
-            name="description"
-            label="Description"
-            rules={[{ required: true, message: "Please enter description" }]}
-          >
-            <Input.TextArea placeholder="Enter description" rows={4} />
-          </Form.Item>
-          <Form.Item
-            name="maxPoint"
-            label="Max Points"
-            rules={[{ required: true, message: "Please select max points" }]}
-          >
-            <Select placeholder="Select max points">
-              {maxPointOptions.map((point) => (
-                <Option key={point} value={point}>
-                  {point}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="levelId"
-            label="Level"
-            rules={[{ required: true, message: "Please select level" }]}
-          >
-            <Select placeholder="Select level">
-              {levelOptions.map((level) => (
-                <Option key={level.id} value={level.id}>
-                  {level.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name="isFree" label="Free Course" valuePropName="checked">
-            <Select placeholder="Is this course free?">
-              <Option value={true}>Yes</Option>
-              <Option value={false}>No</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="isPremium"
-            label="Premium Course"
-            valuePropName="checked"
-          >
-            <Select placeholder="Is this course premium?">
-              <Option value={true}>Yes</Option>
-              <Option value={false}>No</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      ),
-    },
-    {
-      title: "Topics",
-      content: (
-        <Form form={form} layout="vertical" className="space-y-4">
-          <Form.Item
-            name="topicCount"
-            label="Number of Topics"
-            rules={[
-              { required: true, message: "Please select number of topics" },
-            ]}
-          >
-            <Select placeholder="Select number of topics">
-              {getTopicOptions(form.getFieldValue("maxPoint") || 100).map(
-                (count) => (
-                  <Option key={count} value={count}>
-                    {count}
-                  </Option>
-                )
-              )}
-            </Select>
-          </Form.Item>
-        </Form>
-      ),
-    },
-    {
-      title: "Exercises",
-      content: (
-        <Form form={form} layout="vertical" className="space-y-4">
-          {topics.map((_, index) => (
-            <Card key={index} title={`Topic ${index + 1}`} className="mb-4">
-              <Form.Item
-                name={`topicName${index}`}
-                label="Topic Name"
-                rules={[{ required: true, message: "Please enter topic name" }]}
-              >
-                <Input placeholder="Enter topic name" />
-              </Form.Item>
-              <Form.Item
-                name={`exerciseCount${index}`}
-                label="Number of Exercises"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please select number of exercises",
-                  },
-                ]}
-              >
-                <Select placeholder="Select number of exercises">
-                  {getExerciseOptions(
-                    form.getFieldValue("maxPoint") || 100
-                  ).map((count) => (
-                    <Option key={count} value={count}>
-                      {count}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              {Array.from({
-                length: form.getFieldValue(`exerciseCount${index}`) || 0,
-              }).map((_, exIndex) => (
-                <Form.Item
-                  key={exIndex}
-                  name={`exerciseContent${index}-${exIndex}`}
-                  label={`Exercise ${exIndex + 1}`}
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter exercise content",
-                    },
-                  ]}
-                >
-                  <Input placeholder="Enter exercise content" />
-                </Form.Item>
-              ))}
-            </Card>
-          ))}
-        </Form>
-      ),
-    },
-  ];
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md"
+      className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md max-w-4xl mx-auto"
     >
-      <Steps current={currentStep} className="mb-6">
-        {steps.map((item) => (
-          <Step key={item.title} title={item.title} />
-        ))}
-      </Steps>
-      {error && (
-        <Alert message={error} type="error" showIcon className="mb-4" />
-      )}
-      {loading ? <Spin /> : steps[currentStep].content}
-      <div className="mt-6 flex justify-between">
-        <Button onClick={handleBack}>Back</Button>
-        <Button type="primary" onClick={handleNext}>
-          {currentStep === steps.length - 1 ? "Finish" : "Next"}
-        </Button>
-      </div>
+      <Card className="rounded-lg">
+        <div className="p-6">
+          <StepIndicator currentStep={step} />
+          {loading ? (
+            <Loader />
+          ) : (
+            <>
+              {step === 1 && (
+                <CourseForm
+                  courseData={courseData}
+                  setCourseData={setCourseData}
+                  onNext={() => handleStepChange("next")}
+                  onCancel={onCancel}
+                />
+              )}
+              {step === 2 && (
+                <TopicsForm
+                  courseData={courseData}
+                  setCourseData={setCourseData}
+                  onNext={() => handleStepChange("next")}
+                  onPrev={() => handleStepChange("prev")}
+                />
+              )}
+              {step === 3 && (
+                <ExercisesForm
+                  courseData={courseData}
+                  setCourseData={setCourseData}
+                  onPrev={() => handleStepChange("prev")}
+                  onSave={handleSave}
+                  loading={loading}
+                />
+              )}
+            </>
+          )}
+        </div>
+      </Card>
     </motion.div>
   );
 };
