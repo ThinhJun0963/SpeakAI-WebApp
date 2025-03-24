@@ -9,12 +9,13 @@ import {
   BarChart2,
   LogOut,
   Menu,
+  Tag,
 } from "lucide-react";
 
 const menuItems = [
   { icon: Home, label: "Dashboard", path: "/" },
-  // { icon: Calendar, label: "Bookings", path: "/bookings" },
   { icon: Users, label: "Courses", path: "/courses" },
+  { icon: Tag, label: "Vouchers", path: "/vouchers" },
   // { icon: CreditCard, label: "Payments", path: "/payments" },
   // { icon: BarChart2, label: "Reports", path: "/reports" },
   // { icon: Settings, label: "Settings", path: "/settings" },
