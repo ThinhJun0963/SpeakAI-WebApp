@@ -1,79 +1,31 @@
-import React, { useEffect, useState } from "react";
-import CourseCard from "../CourseList/CourseCard";
-import useApi from "../../../components/hooks/useApi";
-import { courseApi } from "../../../api/axiosInstance";
+import React from "react";
+import CourseCard from "./CourseCard";
 import { Card, Spin, Alert, Empty, Button } from "antd";
 
-const CourseList = ({ onRefresh: parentOnRefresh }) => {
-  const { data: courses, loading, error, execute } = useApi([]);
-  const [updatedCourseStatus, setUpdatedCourseStatus] = useState({});
-
-  useEffect(() => {
-    fetchCourses();
-  }, [execute]);
-
-  const fetchCourses = async () => {
-    try {
-      await execute(courseApi.getAll);
-      console.log("Courses fetched:", courses);
-    } catch (err) {
-      console.error("API error:", err);
-    }
-  };
-
-  const handleRefresh = async () => {
-    await fetchCourses();
-    if (parentOnRefresh) parentOnRefresh();
-  };
+const CourseList = ({ courses, onRefresh }) => {
+  const [updatedCourseStatus, setUpdatedCourseStatus] = React.useState({});
 
   const handleCourseUpdate = (courseId, isFree) => {
     setUpdatedCourseStatus((prev) => ({
       ...prev,
       [courseId]: { isFree },
     }));
-    handleRefresh();
+    onRefresh();
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-10">
-        <Spin size="large" tip="Loading courses..." />
-      </div>
-    );
+  if (!Array.isArray(courses)) {
+    return <Spin tip="Loading courses..." />;
   }
 
-  if (error) {
-    return (
-      <Alert
-        message="Error"
-        description={error}
-        type="error"
-        showIcon
-        className="m-6"
-        action={
-          <Button size="small" danger onClick={handleRefresh}>
-            Retry
-          </Button>
-        }
-      />
-    );
-  }
-
-  if (!Array.isArray(courses) || courses.length === 0) {
-    return (
-      <Empty
-        className="py-10"
-        description="No courses available"
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      />
-    );
+  if (courses.length === 0) {
+    return <Empty description="No courses available" />;
   }
 
   return (
     <Card
       title="Course List"
       extra={
-        <Button type="link" onClick={handleRefresh}>
+        <Button type="link" onClick={onRefresh}>
           Refresh
         </Button>
       }
@@ -84,7 +36,7 @@ const CourseList = ({ onRefresh: parentOnRefresh }) => {
           <CourseCard
             key={course.id}
             course={course}
-            onRefresh={handleRefresh}
+            onRefresh={onRefresh}
             onUpdate={handleCourseUpdate}
             updatedStatus={updatedCourseStatus[course.id]}
           />

@@ -8,8 +8,6 @@ const { Text } = Typography;
 const CourseCard = ({ course, onRefresh, onUpdate, updatedStatus }) => {
   const [editModalVisible, setEditModalVisible] = useState(false);
 
-  console.log("CourseCard data:", course, "Updated status:", updatedStatus);
-
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this course?")) {
       try {
@@ -23,9 +21,8 @@ const CourseCard = ({ course, onRefresh, onUpdate, updatedStatus }) => {
   };
 
   const handleEditSuccess = (isFree) => {
-    onUpdate(course.id, isFree); // Truyền isFree vừa update
+    onUpdate(course.id, isFree);
     setEditModalVisible(false);
-    onRefresh();
   };
 
   const levelMap = {
@@ -34,14 +31,11 @@ const CourseCard = ({ course, onRefresh, onUpdate, updatedStatus }) => {
     3: "Advanced",
   };
 
-  // Logic hiển thị: Free mặc định, thêm Premium nếu có
   const isFree =
     updatedStatus?.isFree !== undefined
       ? updatedStatus.isFree
-      : course.isFree !== undefined
-      ? course.isFree
-      : true;
-  const isPremium = course.isPremium !== undefined ? course.isPremium : false;
+      : course.isFree ?? true;
+  const isPremium = course.isPremium ?? false;
 
   return (
     <>
