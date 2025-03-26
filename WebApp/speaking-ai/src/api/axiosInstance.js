@@ -50,4 +50,14 @@ export const voucherApi = {
   delete: (id) => axiosInstance.delete(`/Voucher/id/${id}`),
 };
 
+export const transactionApi = {
+  getList: (status, pageNumber, pageSize) => {
+    const params = { PageNumber: pageNumber, PageSize: pageSize };
+    if (status && status !== "All") {
+      params.Status = status;
+    }
+    return axiosInstance.get("/transactions", { params });
+  },
+};
+
 export default axiosInstance;

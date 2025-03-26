@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { courseApi } from "../../api/axiosInstance";
-import { Table, Button, Input, Modal, Tag } from "antd";
+import { Table, Button, Input, Modal, Tag, Skeleton, Pagination } from "antd";
 import { Plus, Search, Edit, Trash, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
 import CourseEditForm from "./../../components/course/CourseEditForm";
+import debounce from "lodash/debounce"; // Thêm debounce
 
 const CoursePage = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editCourseId, setEditCourseId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
   const isInitialFetch = useRef(true);
 
@@ -48,15 +51,23 @@ const CoursePage = () => {
     if (isInitialFetch.current) fetchCourses();
   }, [fetchCourses]);
 
-  const handleDelete = async (id) => {
+  const handleSearch = debounce((value) => {
+    setSearchTerm(value);
+  }, 300);
+
+  const handleDelete = async (id, courseName) => {
     Modal.confirm({
       title: "Are you sure?",
-      content: "This action cannot be undone.",
+      content: `This action will delete the course "${courseName}". This cannot be undone.`,
       onOk: async () => {
         setLoading(true);
         try {
           await courseApi.delete(id);
           fetchCourses(true);
+          Modal.success({
+            title: "Success",
+            content: "Course deleted successfully.",
+          });
         } catch (error) {
           Modal.error({ title: "Error", content: "Failed to delete course." });
         } finally {
@@ -106,7 +117,7 @@ const CoursePage = () => {
           <Button
             icon={<Trash />}
             danger
-            onClick={() => handleDelete(record.id)}
+            onClick={() => handleDelete(record.id, record.courseName)}
             className="border-none hover:bg-red-100"
             disabled={loading}
           />
@@ -119,19 +130,23 @@ const CoursePage = () => {
     course.courseName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const paginatedCourses = filteredCourses.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-0">
           Course Management
         </h1>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <Input
             placeholder="Search courses..."
             prefix={<Search className="h-4 w-4 text-gray-400" />}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64"
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full sm:w-64"
             disabled={loading}
           />
           <Button
@@ -146,16 +161,30 @@ const CoursePage = () => {
       </div>
 
       {loading ? (
-        <Loader />
+        <Skeleton active paragraph={{ rows: 5 }} />
       ) : filteredCourses.length > 0 ? (
-        <Table
-          columns={columns}
-          dataSource={filteredCourses}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: "max-content" }}
-          loading={loading}
-        />
+        <>
+          <Table
+            columns={columns}
+            dataSource={paginatedCourses}
+            rowKey="id"
+            pagination={false}
+            scroll={{ x: "max-content" }}
+            className="mb-4"
+          />
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={filteredCourses.length}
+            onChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            showSizeChanger
+            pageSizeOptions={["10", "20", "50"]}
+            className="text-center"
+          />
+        </>
       ) : (
         <div className="text-center py-10 text-gray-500">No courses found.</div>
       )}

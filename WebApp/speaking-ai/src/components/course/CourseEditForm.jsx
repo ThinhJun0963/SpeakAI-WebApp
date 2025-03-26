@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { courseApi } from "../../api/axiosInstance";
-import { Form, Input, Select, Button, Modal, Tabs, Spin } from "antd";
+import { Form, Input, Select, Button, Modal, Tabs, Skeleton } from "antd";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -18,7 +18,6 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
     { id: 3, name: "Advanced" },
   ];
 
-  // Hàm parse content từ string JSON sang object
   const parseExerciseContent = (content) => {
     try {
       if (typeof content !== "string") {
@@ -27,7 +26,6 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
       if (content.trim().startsWith("{")) {
         return JSON.parse(content);
       }
-      // Nếu không phải JSON, trả về như một chuỗi đơn giản
       return { type: "text", question: content, answer: "", explanation: "" };
     } catch (error) {
       console.warn("Failed to parse exercise content:", content, error);
@@ -52,7 +50,7 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
               ...t,
               exercises: t.exercises.map((e) => ({
                 ...e,
-                content: parseExerciseContent(e.content), // Sử dụng parse an toàn
+                content: parseExerciseContent(e.content),
               })),
             }))
           );
@@ -141,7 +139,7 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
       width={800}
     >
       {fetchLoading ? (
-        <Spin tip="Loading course data..." />
+        <Skeleton active paragraph={{ rows: 5 }} />
       ) : (
         <Tabs defaultActiveKey="1">
           <TabPane tab="Course Info" key="1">

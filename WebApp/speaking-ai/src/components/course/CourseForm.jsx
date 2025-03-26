@@ -1,14 +1,13 @@
 import React from "react";
-import { Button, Input, Select, Checkbox } from "antd";
+import { Form, Input, Select, Checkbox, Button, Tooltip } from "antd";
+import { InfoCircleOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
 const POINT_OPTIONS = [
+  { value: 90, label: "90 points" },
   { value: 100, label: "100 points" },
   { value: 200, label: "200 points" },
-  { value: 300, label: "300 points" },
-  { value: 400, label: "400 points" },
-  { value: 500, label: "500 points" },
 ];
 
 const LEVEL_OPTIONS = [
@@ -18,84 +17,76 @@ const LEVEL_OPTIONS = [
 ];
 
 export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
-  const handleFieldChange = (field, value) => {
-    setCourseData((prev) => ({ ...prev, [field]: value }));
+  const [form] = Form.useForm();
+
+  const handleValuesChange = (changedValues, allValues) => {
+    setCourseData((prev) => ({ ...prev, ...allValues }));
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Course Name
-        </label>
-        <Input
-          value={courseData.courseName}
-          onChange={(e) => handleFieldChange("courseName", e.target.value)}
-          placeholder="Enter course name"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description
-        </label>
-        <Input
-          value={courseData.description}
-          onChange={(e) => handleFieldChange("description", e.target.value)}
-          placeholder="Enter course description"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Max Point
-        </label>
-        <Select
-          value={courseData.maxPoint}
-          onChange={(value) => handleFieldChange("maxPoint", value)}
-          placeholder="Select max point"
-          className="w-full"
-        >
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={courseData}
+      onValuesChange={handleValuesChange}
+      onFinish={onNext}
+    >
+      <Form.Item
+        name="courseName"
+        label={
+          <span>
+            Course Name{" "}
+            <Tooltip title="Enter a unique name for the course">
+              <InfoCircleOutlined />
+            </Tooltip>
+          </span>
+        }
+        rules={[{ required: true, message: "Please enter course name" }]}
+      >
+        <Input placeholder="Enter course name" />
+      </Form.Item>
+      <Form.Item
+        name="description"
+        label="Description"
+        rules={[{ required: true, message: "Please enter description" }]}
+      >
+        <Input.TextArea rows={4} placeholder="Enter course description" />
+      </Form.Item>
+      <Form.Item
+        name="maxPoint"
+        label="Max Point"
+        rules={[{ required: true, message: "Please select max point" }]}
+      >
+        <Select placeholder="Select max point">
           {POINT_OPTIONS.map((option) => (
             <Option key={option.value} value={option.value}>
               {option.label}
             </Option>
           ))}
         </Select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Level
-        </label>
-        <Select
-          value={courseData.levelId}
-          onChange={(value) => handleFieldChange("levelId", value)}
-          placeholder="Select course level"
-          className="w-full"
-        >
+      </Form.Item>
+      <Form.Item
+        name="levelId"
+        label="Level"
+        rules={[{ required: true, message: "Please select level" }]}
+      >
+        <Select placeholder="Select course level">
           {LEVEL_OPTIONS.map((option) => (
             <Option key={option.value} value={option.value}>
               {option.label}
             </Option>
           ))}
         </Select>
-      </div>
-      <div>
-        <Checkbox
-          checked={courseData.isPremium}
-          onChange={(e) => handleFieldChange("isPremium", e.target.checked)}
-        >
-          Premium
-        </Checkbox>
-      </div>
+      </Form.Item>
+      <Form.Item name="isPremium" valuePropName="checked">
+        <Checkbox>Premium</Checkbox>
+      </Form.Item>
       <div className="flex justify-between pt-6">
         <Button onClick={onCancel}>Cancel</Button>
-        <Button
-          type="primary"
-          onClick={onNext}
-          disabled={!courseData.courseName || !courseData.description}
-        >
+        <Button type="primary" htmlType="submit">
           Next
         </Button>
       </div>
-    </div>
+    </Form>
   );
 };
