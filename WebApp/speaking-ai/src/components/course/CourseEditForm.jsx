@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { courseApi } from "../../api/axiosInstance";
-import {
-  Form,
-  Input,
-  Select,
-  Button,
-  Modal,
-  message,
-  Tabs,
-  Spin,
-  Tag,
-} from "antd";
+import { Form, Input, Select, Button, Modal, Tabs, Spin } from "antd";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -28,28 +18,56 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
     { id: 3, name: "Advanced" },
   ];
 
+  // Hàm parse content từ string JSON sang object
+  const parseExerciseContent = (content) => {
+    try {
+      if (typeof content !== "string") {
+        throw new Error("Content is not a string");
+      }
+      if (content.trim().startsWith("{")) {
+        return JSON.parse(content);
+      }
+      // Nếu không phải JSON, trả về như một chuỗi đơn giản
+      return { type: "text", question: content, answer: "", explanation: "" };
+    } catch (error) {
+      console.warn("Failed to parse exercise content:", content, error);
+      return {
+        type: "text",
+        question: content || "Invalid content",
+        answer: "",
+        explanation: "Could not parse content",
+      };
+    }
+  };
+
   useEffect(() => {
     if (visible && courseId) {
       const fetchCourse = async () => {
         setFetchLoading(true);
         try {
           const data = await courseApi.getDetails(courseId);
-          console.log(data);
           setCourseData(data);
-          setTopics(data.topics || []);
+          setTopics(
+            data.topics.map((t) => ({
+              ...t,
+              exercises: t.exercises.map((e) => ({
+                ...e,
+                content: parseExerciseContent(e.content), // Sử dụng parse an toàn
+              })),
+            }))
+          );
           form.setFieldsValue({
             courseName: data.courseName,
             description: data.description,
             maxPoint: data.maxPoint,
             levelId: data.levelId,
-            isActive: data.isActive,
-            isFree: data.isFree,
-            // isFree: data.isFree,
+            isPremium: data.isPremium,
           });
         } catch (error) {
+          console.error("Error fetching course data:", error);
           Modal.error({
-            title: "Lỗi",
-            content: "Không thể tải dữ liệu khóa học.",
+            title: "Error",
+            content: "Failed to load course data.",
           });
         } finally {
           setFetchLoading(false);
@@ -62,19 +80,17 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
   const handleFinish = async (values) => {
     setLoading(true);
     try {
-      // Cập nhật thông tin course, không gửi isPremium
       await courseApi.update(courseId, {
         courseName: values.courseName,
         description: values.description,
         maxPoint: values.maxPoint,
-        isFree: values.isFree ,
+        isPremium: values.isPremium,
         levelId: values.levelId,
       });
 
       const topicPromises = topics.map((topic) =>
         courseApi.updateTopic(topic.id, {
           topicName: topic.topicName,
-          isDeleted: topic.isDeleted || false,
           isActive: topic.isActive !== undefined ? topic.isActive : true,
         })
       );
@@ -82,17 +98,23 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
       const exercisePromises = topics.flatMap((topic) =>
         topic.exercises.map((exercise) =>
           courseApi.updateExercise(exercise.id, {
-            content: exercise.content,
+            content: JSON.stringify(exercise.content),
           })
         )
       );
 
       await Promise.all([...topicPromises, ...exercisePromises]);
 
-      message.success("Khóa học đã được cập nhật thành công");
-      onSuccess();
+      Modal.success({
+        title: "Success",
+        content: "Course updated successfully.",
+        onOk: onSuccess,
+      });
     } catch (error) {
-      Modal.error({ title: "Lỗi", content: "Không thể cập nhật khóa học." });
+      Modal.error({
+        title: "Error",
+        content: "Failed to update course.",
+      });
     } finally {
       setLoading(false);
     }
@@ -106,26 +128,23 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
 
   const handleExerciseChange = (topicIndex, exerciseIndex, field, value) => {
     const updatedTopics = [...topics];
-    updatedTopics[topicIndex].exercises[exerciseIndex][field] = value;
+    updatedTopics[topicIndex].exercises[exerciseIndex].content[field] = value;
     setTopics(updatedTopics);
   };
 
   return (
     <Modal
-      title="Chỉnh sửa khóa học"
+      title="Edit Course"
       open={visible}
       onCancel={onCancel}
       footer={null}
-      className="rounded-lg"
       width={800}
     >
       {fetchLoading ? (
-        <div className="text-center py-10">
-          <Spin tip="Đang tải dữ liệu khóa học..." />
-        </div>
+        <Spin tip="Loading course data..." />
       ) : (
         <Tabs defaultActiveKey="1">
-          <TabPane tab="Thông tin khóa học" key="1">
+          <TabPane tab="Course Info" key="1">
             <Form
               form={form}
               layout="vertical"
@@ -134,35 +153,28 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
             >
               <Form.Item
                 name="courseName"
-                label="Tên khóa học"
+                label="Course Name"
                 rules={[
-                  { required: true, message: "Vui lòng nhập tên khóa học" },
+                  { required: true, message: "Please enter course name" },
                 ]}
               >
-                <Input
-                  placeholder="Nhập tên khóa học"
-                  className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <Input placeholder="Enter course name" />
               </Form.Item>
               <Form.Item
                 name="description"
-                label="Mô tả"
-                rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
+                label="Description"
+                rules={[
+                  { required: true, message: "Please enter description" },
+                ]}
               >
-                <Input.TextArea
-                  placeholder="Nhập mô tả"
-                  rows={4}
-                  className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <Input.TextArea rows={4} placeholder="Enter description" />
               </Form.Item>
               <Form.Item
                 name="maxPoint"
-                label="Điểm tối đa"
-                rules={[
-                  { required: true, message: "Vui lòng chọn điểm tối đa" },
-                ]}
+                label="Max Point"
+                rules={[{ required: true, message: "Please select max point" }]}
               >
-                <Select placeholder="Chọn điểm tối đa" className="rounded-md">
+                <Select placeholder="Select max point">
                   {maxPointOptions.map((point) => (
                     <Option key={point} value={point}>
                       {point}
@@ -172,10 +184,10 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
               </Form.Item>
               <Form.Item
                 name="levelId"
-                label="Cấp độ"
-                rules={[{ required: true, message: "Vui lòng chọn cấp độ" }]}
+                label="Level"
+                rules={[{ required: true, message: "Please select level" }]}
               >
-                <Select placeholder="Chọn cấp độ" className="rounded-md">
+                <Select placeholder="Select level">
                   {levelOptions.map((level) => (
                     <Option key={level.id} value={level.id}>
                       {level.name}
@@ -183,65 +195,23 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
                   ))}
                 </Select>
               </Form.Item>
-              <Form.Item name="isFree" label="Khóa học miễn phí">
-                <Select
-                  placeholder="Khóa học này có miễn phí không?"
-                  className="rounded-md"
-                >
-                  <Option value={true}>Có</Option>
-                  <Option value={false}>Không</Option>
+              <Form.Item name="isPremium" label="Premium Status">
+                <Select placeholder="Is this course premium?">
+                  <Option value={true}>Yes</Option>
+                  <Option value={false}>No</Option>
                 </Select>
               </Form.Item>
               <Form.Item className="flex justify-end space-x-2">
-                <Button
-                  onClick={onCancel}
-                  className="rounded-md border-gray-300 hover:bg-gray-100"
-                  disabled={loading}
-                >
-                  Hủy
+                <Button onClick={onCancel} disabled={loading}>
+                  Cancel
                 </Button>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                  loading={loading}
-                >
-                  {loading ? "Đang lưu..." : "Lưu"}
+                <Button type="primary" htmlType="submit" loading={loading}>
+                  Save
                 </Button>
               </Form.Item>
             </Form>
           </TabPane>
-          <TabPane tab="Free" key="2">
-            <div className="p-4">
-              <p>
-                Trạng thái Free:{" "}
-                {courseData?.isFree ? (
-                  <Tag color="green">Có</Tag>
-                ) : (
-                  <Tag color="red">Không</Tag>
-                )}
-              </p>
-              <p className="text-gray-500">
-                Có thể chỉnh sửa trạng thái Free trong tab Thông tin.
-              </p>
-            </div>
-          </TabPane>
-          <TabPane tab="Premium" key="3">
-            <div className="p-4">
-              <p>
-                Trạng thái Premium:{" "}
-                {courseData?.isPremium ? (
-                  <Tag color="orange">Có</Tag>
-                ) : (
-                  <Tag color="default">Không</Tag>
-                )}
-              </p>
-              <p className="text-gray-500">
-                Không thể chỉnh sửa trạng thái Premium.
-              </p>
-            </div>
-          </TabPane>
-          <TabPane tab="Chủ đề và bài tập" key="4">
+          <TabPane tab="Topics & Exercises" key="2">
             <div className="p-4 space-y-4">
               {topics.map((topic, topicIndex) => (
                 <div key={topic.id} className="border p-4 rounded-md">
@@ -250,30 +220,83 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
                     onChange={(e) =>
                       handleTopicChange(topicIndex, "topicName", e.target.value)
                     }
-                    placeholder="Tên chủ đề"
+                    placeholder="Topic Name"
                     className="mb-2"
                   />
-                  <p>Điểm tối đa: {topic.maxPoint} (Không thể chỉnh sửa)</p>
+                  <p>Max Point: {topic.maxPoint} (Cannot be edited)</p>
                   <div className="space-y-2">
                     {topic.exercises.map((exercise, exerciseIndex) => (
                       <div key={exercise.id} className="ml-4">
-                        <Input.TextArea
-                          value={exercise.content}
+                        <Input
+                          value={exercise.content.type}
                           onChange={(e) =>
                             handleExerciseChange(
                               topicIndex,
                               exerciseIndex,
-                              "content",
+                              "type",
                               e.target.value
                             )
                           }
-                          placeholder={`Nội dung bài tập ${exerciseIndex + 1}`}
+                          placeholder="Exercise Type"
+                          className="mb-2"
+                        />
+                        <Input.TextArea
+                          value={exercise.content.question}
+                          onChange={(e) =>
+                            handleExerciseChange(
+                              topicIndex,
+                              exerciseIndex,
+                              "question",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Question"
                           rows={2}
                           className="mb-2"
                         />
-                        <p>
-                          Điểm tối đa: {exercise.maxPoint} (Không thể chỉnh sửa)
-                        </p>
+                        {exercise.content.type === "multiple_choice" && (
+                          <Input
+                            value={exercise.content.options?.join(", ")}
+                            onChange={(e) =>
+                              handleExerciseChange(
+                                topicIndex,
+                                exerciseIndex,
+                                "options",
+                                e.target.value.split(", ")
+                              )
+                            }
+                            placeholder="Options (comma-separated)"
+                            className="mb-2"
+                          />
+                        )}
+                        <Input
+                          value={exercise.content.answer}
+                          onChange={(e) =>
+                            handleExerciseChange(
+                              topicIndex,
+                              exerciseIndex,
+                              "answer",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Answer"
+                          className="mb-2"
+                        />
+                        <Input.TextArea
+                          value={exercise.content.explanation}
+                          onChange={(e) =>
+                            handleExerciseChange(
+                              topicIndex,
+                              exerciseIndex,
+                              "explanation",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Explanation"
+                          rows={2}
+                          className="mb-2"
+                        />
+                        <p>Max Point: {exercise.maxPoint} (Cannot be edited)</p>
                       </div>
                     ))}
                   </div>

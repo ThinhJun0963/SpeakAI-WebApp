@@ -5,6 +5,7 @@ import AdminPage from "./pages/AdminPage";
 import DashboardHome from "./pages/DashboardHome";
 import CoursePage from "./pages/course/CoursePage";
 import CreateCoursePage from "./pages/course/CreateCoursePage";
+import CourseDetailPage from "./pages/course/CourseDetailPage"; // Thêm import mới
 import CourseEditForm from "./components/course/CourseEditForm";
 import VoucherPage from "./pages/voucher/VoucherPage";
 import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
@@ -30,6 +31,11 @@ function App() {
             }
           />
           <Route path="/courses/edit/:id" element={<CourseEditFormWrapper />} />
+          <Route
+            path="/courses/:id/details"
+            element={<CourseDetailPage />}
+          />{" "}
+          {/* Route mới */}
           <Route path="/vouchers" element={<VoucherPage />} />
           <Route
             path="/vouchers/create"
@@ -58,7 +64,7 @@ const CourseEditFormWrapper = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const data = await courseApi.getById(id);
+        const data = await courseApi.getDetails(id); // Sử dụng getDetails thay vì getById
         setCourse(data);
       } catch (error) {
         console.error("Failed to fetch course:", error);
@@ -69,7 +75,7 @@ const CourseEditFormWrapper = () => {
 
   return (
     <CourseEditForm
-      course={course}
+      courseId={id} // Truyền courseId thay vì course object
       visible={true}
       onCancel={() => navigate("/courses")}
       onSuccess={() => navigate("/courses")}

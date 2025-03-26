@@ -1,20 +1,21 @@
 import React, { useState } from "react";
 import { courseApi } from "../../api/axiosInstance";
-import { Card, Modal } from "antd";
+import { Card, Modal, Button } from "antd";
 import { CourseForm } from "../../components/course/CourseForm";
 import { TopicsForm } from "../../components/course/TopicForm";
 import { ExercisesForm } from "../../components/course/ExerciseForm";
 import { StepIndicator } from "../../components/course/StepIndicator";
 import Loader from "../../components/Loader";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
-export const CreateCoursePage = ({ onComplete, onCancel }) => {
+export const CreateCoursePage = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [courseData, setCourseData] = useState({
     courseName: "",
     description: "",
     maxPoint: 90,
-    isFree: false,
     isPremium: false,
     levelId: 1,
     topics: [],
@@ -62,31 +63,34 @@ export const CreateCoursePage = ({ onComplete, onCancel }) => {
         courseName: courseData.courseName,
         description: courseData.description,
         maxPoint: courseData.maxPoint,
-        isFree: courseData.isFree,
         isPremium: courseData.isPremium,
         levelId: courseData.levelId,
-        topics: courseData.topics.map((topic) => ({
+      };
+      const courseResponse = await courseApi.create(payload);
+      const courseId = courseResponse.id;
+
+      for (const topic of courseData.topics) {
+        const topicPayload = {
           topicName: topic.topicName,
           maxPoint: topic.maxPoint,
           exercises: topic.exercises.map((exercise) => ({
-            content: exercise.content,
+            content: JSON.stringify(exercise.content),
             maxPoint: exercise.maxPoint,
           })),
-        })),
-      };
+        };
+        await courseApi.addTopic(courseId, topicPayload);
+      }
 
-      const response = await courseApi.create(payload);
       Modal.success({
         title: "Success",
         content: "Course created successfully!",
-        onOk: () => onComplete(response), // Pass the created course back
+        onOk: () => navigate("/courses"),
       });
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.errors?.Topics?.[0] ||
-        "Could not create course. Please check your data.";
-      Modal.error({ title: "Error", content: errorMessage });
+    } catch (error) {
+      Modal.error({
+        title: "Error",
+        content: error.message || "Failed to create course.",
+      });
     } finally {
       setLoading(false);
     }
@@ -104,7 +108,7 @@ export const CreateCoursePage = ({ onComplete, onCancel }) => {
       exit={{ opacity: 0 }}
       className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md max-w-4xl mx-auto"
     >
-      <Card className="rounded-lg">
+      <Card>
         <div className="p-6">
           <StepIndicator currentStep={step} />
           {loading ? (
@@ -116,7 +120,7 @@ export const CreateCoursePage = ({ onComplete, onCancel }) => {
                   courseData={courseData}
                   setCourseData={setCourseData}
                   onNext={() => handleStepChange("next")}
-                  onCancel={onCancel}
+                  onCancel={() => navigate("/courses")}
                 />
               )}
               {step === 2 && (

@@ -19,10 +19,8 @@ axiosInstance.interceptors.response.use(
   (error) => Promise.reject(error.response?.data || error)
 );
 
-// Course API
 export const courseApi = {
   getAll: () => axiosInstance.get("/courses"),
-  getById: (id) => axiosInstance.get(`/courses/${id}`),
   getDetails: (id) => axiosInstance.get(`/courses/${id}/details`),
   create: (courseData) => axiosInstance.post("/courses", courseData),
   update: (id, courseData) => axiosInstance.put(`/courses/${id}`, courseData),
@@ -39,6 +37,8 @@ export const courseApi = {
     axiosInstance.get(`/courses/exercise/${exerciseId}`),
   updateExercise: (exerciseId, exerciseData) =>
     axiosInstance.put(`/courses/exercise/${exerciseId}`, exerciseData),
+  deleteExercise: (exerciseId) =>
+    axiosInstance.delete(`/courses/exercise/${exerciseId}`),
 };
 
 export const voucherApi = {

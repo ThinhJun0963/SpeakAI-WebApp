@@ -3,7 +3,6 @@ import { Button, Input, Select } from "antd";
 
 const { Option } = Select;
 
-// Hàm tính các ước số của một số
 const calculateFactors = (number) => {
   const factors = [];
   for (let i = 1; i <= number; i++) {
@@ -16,10 +15,9 @@ export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
   const availableTopicNumbers = calculateFactors(courseData.maxPoint);
   const [numberOfTopics, setNumberOfTopics] = useState(
     availableTopicNumbers[0]
-  ); // Mặc định chọn tùy chọn đầu tiên
+  );
 
   useEffect(() => {
-    // Khởi tạo topics nếu chưa có
     if (courseData.topics.length === 0) {
       handleTopicNumberChange(availableTopicNumbers[0]);
     }
@@ -28,11 +26,11 @@ export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
   const handleTopicNumberChange = (value) => {
     const newTopicCount = value;
     setNumberOfTopics(newTopicCount);
-    const topicMaxPoint = courseData.maxPoint / newTopicCount; // Chia đều điểm
+    const topicMaxPoint = courseData.maxPoint / newTopicCount;
     const newTopics = Array(newTopicCount)
       .fill(null)
       .map((_, index) => ({
-        topicName: `Chủ đề ${index + 1}`,
+        topicName: `Topic ${index + 1}`,
         maxPoint: topicMaxPoint,
         exercises: [],
       }));
@@ -48,17 +46,17 @@ export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Số lượng chủ đề
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Number of Topics
         </label>
         <Select
           value={numberOfTopics}
           onChange={handleTopicNumberChange}
-          className="w-full rounded-md"
+          className="w-full"
         >
           {availableTopicNumbers.map((num) => (
             <Option key={num} value={num}>
-              {num} Chủ đề (Mỗi chủ đề: {courseData.maxPoint / num} điểm)
+              {num} Topics (Each: {courseData.maxPoint / num} points)
             </Option>
           ))}
         </Select>
@@ -69,25 +67,18 @@ export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
             key={index}
             value={topic.topicName}
             onChange={(e) => handleTopicNameChange(index, e.target.value)}
-            placeholder={`Tên chủ đề ${index + 1}`}
-            className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder={`Topic ${index + 1} Name`}
           />
         ))}
       </div>
       <div className="flex justify-between">
-        <Button
-          onClick={onPrev}
-          className="rounded-md border-gray-300 hover:bg-gray-100"
-        >
-          Quay lại
-        </Button>
+        <Button onClick={onPrev}>Back</Button>
         <Button
           type="primary"
           onClick={onNext}
           disabled={courseData.topics.some((t) => !t.topicName)}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-md"
         >
-          Tiếp theo
+          Next
         </Button>
       </div>
     </div>

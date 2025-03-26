@@ -3,9 +3,9 @@ import { BookOpen, ListTodo, Trophy } from "lucide-react";
 
 export const StepIndicator = ({ currentStep }) => {
   const steps = [
-    { number: 1, title: "Thông tin khóa học", icon: BookOpen },
-    { number: 2, title: "Chủ đề", icon: ListTodo },
-    { number: 3, title: "Bài tập", icon: Trophy },
+    { number: 1, title: "Course Info", icon: BookOpen },
+    { number: 2, title: "Topics", icon: ListTodo },
+    { number: 3, title: "Exercises", icon: Trophy },
   ];
 
   return (

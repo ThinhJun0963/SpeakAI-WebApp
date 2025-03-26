@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { CourseForm } from "./CourseForm";
-import { TopicsForm } from "./TopicForm"; // Sửa tên file import
-import { ExercisesForm } from "./ExerciseForm"; // Sửa tên file import
+import { TopicsForm } from "./TopicForm";
+import { ExercisesForm } from "./ExerciseForm";
 import { StepIndicator } from "./StepIndicator";
-import { courseApi } from "../../api/axiosInstance"; // Cập nhật import
+import { courseApi } from "../../api/axiosInstance";
 import { Card } from "antd";
 
 export const CourseCreationSteps = ({ onComplete, onCancel }) => {
@@ -26,7 +26,7 @@ export const CourseCreationSteps = ({ onComplete, onCancel }) => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await courseApi.create(courseData); // Cập nhật courseApi
+      await courseApi.create(courseData); 
       onComplete();
     } catch (err) {
       setError(err.message || "Failed to create course");

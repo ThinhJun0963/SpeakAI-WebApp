@@ -4,7 +4,6 @@ import { Button, Input, Select } from "antd";
 const { TextArea } = Input;
 const { Option } = Select;
 
-// Hàm tính các ước số của một số
 const calculateFactors = (number) => {
   const factors = [];
   for (let i = 1; i <= number; i++) {
@@ -20,7 +19,7 @@ export const ExercisesForm = ({
   onSave,
   loading,
 }) => {
-  const [selectedTopicIndex, setSelectedTopicIndex] = useState(0); // Mặc định chọn topic đầu tiên
+  const [selectedTopicIndex, setSelectedTopicIndex] = useState(0);
   const [numberOfExercises, setNumberOfExercises] = useState(null);
 
   const selectedTopic =
@@ -31,7 +30,6 @@ export const ExercisesForm = ({
     : [];
 
   useEffect(() => {
-    // Đặt mặc định số lượng bài tập cho topic đầu tiên
     if (selectedTopic && !numberOfExercises) {
       handleExerciseNumberChange(availableExerciseNumbers[0]);
     }
@@ -39,40 +37,46 @@ export const ExercisesForm = ({
 
   const handleTopicChange = (value) => {
     setSelectedTopicIndex(value);
-    setNumberOfExercises(null); // Reset khi đổi topic
+    setNumberOfExercises(null);
   };
 
   const handleExerciseNumberChange = (value) => {
     const newExerciseCount = value;
     setNumberOfExercises(newExerciseCount);
-    const exerciseMaxPoint = selectedTopic.maxPoint / newExerciseCount; // Chia đều điểm
+    const exerciseMaxPoint = selectedTopic.maxPoint / newExerciseCount;
     const updatedTopics = [...courseData.topics];
     updatedTopics[selectedTopicIndex].exercises = Array(newExerciseCount)
       .fill(null)
-      .map(() => ({ content: "", maxPoint: exerciseMaxPoint }));
+      .map(() => ({
+        content: {
+          type: "",
+          question: "",
+          options: [],
+          answer: "",
+          explanation: "",
+        },
+        maxPoint: exerciseMaxPoint,
+      }));
     setCourseData((prev) => ({ ...prev, topics: updatedTopics }));
   };
 
-  const handleExerciseContentChange = (index, newContent) => {
+  const handleExerciseChange = (index, field, value) => {
     const updatedTopics = [...courseData.topics];
-    updatedTopics[selectedTopicIndex].exercises[index] = {
-      ...updatedTopics[selectedTopicIndex].exercises[index],
-      content: newContent,
-    };
+    updatedTopics[selectedTopicIndex].exercises[index].content[field] = value;
     setCourseData((prev) => ({ ...prev, topics: updatedTopics }));
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Chọn chủ đề
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Select Topic
         </label>
         <Select
           value={selectedTopicIndex}
           onChange={handleTopicChange}
-          placeholder="Chọn một chủ đề"
-          className="w-full rounded-md"
+          placeholder="Select a topic"
+          className="w-full"
         >
           {courseData.topics.map((topic, index) => (
             <Option key={index} value={index}>
@@ -84,17 +88,17 @@ export const ExercisesForm = ({
       {selectedTopic && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Số lượng bài tập
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Number of Exercises
             </label>
             <Select
               value={numberOfExercises}
               onChange={handleExerciseNumberChange}
-              className="w-full rounded-md"
+              className="w-full"
             >
               {availableExerciseNumbers.map((num) => (
                 <Option key={num} value={num}>
-                  {num} Bài tập (Mỗi bài: {selectedTopic.maxPoint / num} điểm)
+                  {num} Exercises (Each: {selectedTopic.maxPoint / num} points)
                 </Option>
               ))}
             </Select>
@@ -102,17 +106,53 @@ export const ExercisesForm = ({
           <div className="space-y-4">
             {selectedTopic.exercises.map((exercise, index) => (
               <div key={index}>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Bài tập {index + 1}
-                </label>
-                <TextArea
-                  value={exercise.content}
+                <Input
+                  value={exercise.content.type}
                   onChange={(e) =>
-                    handleExerciseContentChange(index, e.target.value)
+                    handleExerciseChange(index, "type", e.target.value)
                   }
-                  placeholder={`Nhập nội dung cho bài tập ${index + 1}`}
-                  rows={4}
-                  className="rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Exercise Type (e.g., true_false, multiple_choice)"
+                  className="mb-2"
+                />
+                <TextArea
+                  value={exercise.content.question}
+                  onChange={(e) =>
+                    handleExerciseChange(index, "question", e.target.value)
+                  }
+                  placeholder={`Question for Exercise ${index + 1}`}
+                  rows={2}
+                  className="mb-2"
+                />
+                {exercise.content.type === "multiple_choice" && (
+                  <Input
+                    value={exercise.content.options.join(", ")}
+                    onChange={(e) =>
+                      handleExerciseChange(
+                        index,
+                        "options",
+                        e.target.value.split(", ")
+                      )
+                    }
+                    placeholder="Options (comma-separated)"
+                    className="mb-2"
+                  />
+                )}
+                <Input
+                  value={exercise.content.answer}
+                  onChange={(e) =>
+                    handleExerciseChange(index, "answer", e.target.value)
+                  }
+                  placeholder="Answer"
+                  className="mb-2"
+                />
+                <TextArea
+                  value={exercise.content.explanation}
+                  onChange={(e) =>
+                    handleExerciseChange(index, "explanation", e.target.value)
+                  }
+                  placeholder="Explanation"
+                  rows={2}
+                  className="mb-2"
                 />
               </div>
             ))}
@@ -120,12 +160,8 @@ export const ExercisesForm = ({
         </>
       )}
       <div className="flex justify-between mt-6">
-        <Button
-          onClick={onPrev}
-          disabled={loading}
-          className="rounded-md border-gray-300 hover:bg-gray-100"
-        >
-          Quay lại
+        <Button onClick={onPrev} disabled={loading}>
+          Back
         </Button>
         <Button
           type="primary"
@@ -134,9 +170,8 @@ export const ExercisesForm = ({
             loading || !courseData.topics.every((t) => t.exercises.length > 0)
           }
           loading={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-md"
         >
-          Lưu khóa học
+          Save Course
         </Button>
       </div>
     </div>
