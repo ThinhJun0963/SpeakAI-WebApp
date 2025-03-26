@@ -19,10 +19,8 @@ axiosInstance.interceptors.response.use(
   (error) => Promise.reject(error.response?.data || error)
 );
 
-// Course API
 export const courseApi = {
   getAll: () => axiosInstance.get("/courses"),
-  getById: (id) => axiosInstance.get(`/courses/${id}`),
   getDetails: (id) => axiosInstance.get(`/courses/${id}/details`),
   create: (courseData) => axiosInstance.post("/courses", courseData),
   update: (id, courseData) => axiosInstance.put(`/courses/${id}`, courseData),
@@ -39,6 +37,8 @@ export const courseApi = {
     axiosInstance.get(`/courses/exercise/${exerciseId}`),
   updateExercise: (exerciseId, exerciseData) =>
     axiosInstance.put(`/courses/exercise/${exerciseId}`, exerciseData),
+  deleteExercise: (exerciseId) =>
+    axiosInstance.delete(`/courses/exercise/${exerciseId}`),
 };
 
 export const voucherApi = {
@@ -48,6 +48,20 @@ export const voucherApi = {
   update: (id, voucherData) =>
     axiosInstance.put(`/Voucher/id/${id}`, voucherData),
   delete: (id) => axiosInstance.delete(`/Voucher/id/${id}`),
+};
+
+export const transactionApi = {
+  getList: (status, pageNumber, pageSize) => {
+    const params = { PageNumber: pageNumber, PageSize: pageSize };
+    if (status && status !== "All") {
+      params.Status = status;
+    }
+    return axiosInstance.get("/transactions", { params });
+  },
+};
+
+export const userApi = {
+  getUserById: (userId) => axiosInstance.get(`/users/${userId}`),
 };
 
 export default axiosInstance;

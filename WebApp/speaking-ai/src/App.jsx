@@ -5,10 +5,12 @@ import AdminPage from "./pages/AdminPage";
 import DashboardHome from "./pages/DashboardHome";
 import CoursePage from "./pages/course/CoursePage";
 import CreateCoursePage from "./pages/course/CreateCoursePage";
+import CourseDetailPage from "./pages/course/CourseDetailPage";
 import CourseEditForm from "./components/course/CourseEditForm";
 import VoucherPage from "./pages/voucher/VoucherPage";
 import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
 import VoucherEditForm from "./pages/voucher/VoucherEditForm";
+import TransactionPage from "./pages/transaction/TransactionPage";
 import { courseApi, voucherApi } from "./api/axiosInstance";
 import { useState, useEffect } from "react";
 
@@ -30,6 +32,7 @@ function App() {
             }
           />
           <Route path="/courses/edit/:id" element={<CourseEditFormWrapper />} />
+          <Route path="/courses/:id/details" element={<CourseDetailPage />} />
           <Route path="/vouchers" element={<VoucherPage />} />
           <Route
             path="/vouchers/create"
@@ -44,6 +47,7 @@ function App() {
             path="/vouchers/edit/:id"
             element={<VoucherEditFormWrapper />}
           />
+          <Route path="/transactions" element={<TransactionPage />} />
         </Route>
       </Routes>
     </Router>
@@ -58,7 +62,7 @@ const CourseEditFormWrapper = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const data = await courseApi.getById(id);
+        const data = await courseApi.getDetails(id);
         setCourse(data);
       } catch (error) {
         console.error("Failed to fetch course:", error);
@@ -69,7 +73,7 @@ const CourseEditFormWrapper = () => {
 
   return (
     <CourseEditForm
-      course={course}
+      courseId={id}
       visible={true}
       onCancel={() => navigate("/courses")}
       onSuccess={() => navigate("/courses")}

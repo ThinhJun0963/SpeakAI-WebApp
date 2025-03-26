@@ -1,11 +1,12 @@
 import React from "react";
 import { BookOpen, ListTodo, Trophy } from "lucide-react";
+import { Tooltip } from "antd";
 
-export const StepIndicator = ({ currentStep }) => {
+export const StepIndicator = ({ currentStep, onStepClick, validateStep }) => {
   const steps = [
-    { number: 1, title: "Thông tin khóa học", icon: BookOpen },
-    { number: 2, title: "Chủ đề", icon: ListTodo },
-    { number: 3, title: "Bài tập", icon: Trophy },
+    { number: 1, title: "Course Info", icon: BookOpen },
+    { number: 2, title: "Topics", icon: ListTodo },
+    { number: 3, title: "Exercises", icon: Trophy },
   ];
 
   return (
@@ -15,31 +16,46 @@ export const StepIndicator = ({ currentStep }) => {
         <div className="relative flex justify-between">
           {steps.map((step) => {
             const StepIcon = step.icon;
+            const isClickable = validateStep(step.number - 1);
             return (
-              <div key={step.number} className="flex flex-col items-center">
+              <Tooltip
+                key={step.number}
+                title={
+                  isClickable
+                    ? `Go to ${step.title}`
+                    : "Complete previous steps first"
+                }
+              >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center relative z-10 transition-colors duration-200 ${
-                    currentStep >= step.number ? "bg-blue-600" : "bg-gray-200"
+                  className={`flex flex-col items-center ${
+                    isClickable ? "cursor-pointer" : "cursor-not-allowed"
                   }`}
+                  onClick={() => isClickable && onStepClick(step.number)}
                 >
-                  <StepIcon
-                    className={`w-5 h-5 ${
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center relative z-10 transition-colors duration-200 ${
+                      currentStep >= step.number ? "bg-blue-600" : "bg-gray-200"
+                    } hover:bg-blue-500`}
+                  >
+                    <StepIcon
+                      className={`w-5 h-5 ${
+                        currentStep >= step.number
+                          ? "text-white"
+                          : "text-gray-500"
+                      }`}
+                    />
+                  </div>
+                  <span
+                    className={`mt-2 text-sm font-medium ${
                       currentStep >= step.number
-                        ? "text-white"
+                        ? "text-blue-600"
                         : "text-gray-500"
                     }`}
-                  />
+                  >
+                    {step.title}
+                  </span>
                 </div>
-                <span
-                  className={`mt-2 text-sm font-medium ${
-                    currentStep >= step.number
-                      ? "text-blue-600"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {step.title}
-                </span>
-              </div>
+              </Tooltip>
             );
           })}
         </div>
