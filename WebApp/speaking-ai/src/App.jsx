@@ -10,6 +10,7 @@ import CourseEditForm from "./components/course/CourseEditForm";
 import VoucherPage from "./pages/voucher/VoucherPage";
 import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
 import VoucherEditForm from "./pages/voucher/VoucherEditForm";
+import TransactionPage from "./pages/transaction/TransactionPage";
 import { courseApi, voucherApi } from "./api/axiosInstance";
 import { useState, useEffect } from "react";
 
@@ -46,6 +47,7 @@ function App() {
             path="/vouchers/edit/:id"
             element={<VoucherEditFormWrapper />}
           />
+          <Route path="/transactions" element={<TransactionPage />} />
         </Route>
       </Routes>
     </Router>

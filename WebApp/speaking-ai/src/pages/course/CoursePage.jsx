@@ -3,7 +3,6 @@ import { courseApi } from "../../api/axiosInstance";
 import { Table, Button, Input, Modal, Tag, Skeleton, Pagination } from "antd";
 import { Plus, Search, Edit, Trash, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Loader from "../../components/Loader";
 import CourseEditForm from "./../../components/course/CourseEditForm";
 import debounce from "lodash/debounce"; // Thêm debounce
 

@@ -60,4 +60,8 @@ export const transactionApi = {
   },
 };
 
+export const userApi = {
+  getUserById: (userId) => axiosInstance.get(`/users/${userId}`),
+};
+
 export default axiosInstance;

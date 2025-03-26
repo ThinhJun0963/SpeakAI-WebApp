@@ -16,7 +16,7 @@ const menuItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: Users, label: "Courses", path: "/courses" },
   { icon: Tag, label: "Vouchers", path: "/vouchers" },
-  // { icon: CreditCard, label: "Payments", path: "/payments" },
+  { icon: CreditCard, label: "Transactions", path: "/transactions" },
   // { icon: BarChart2, label: "Reports", path: "/reports" },
   // { icon: Settings, label: "Settings", path: "/settings" },
 ];
