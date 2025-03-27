@@ -49,7 +49,7 @@ export const voucherApi = {
   getAll: () => axiosInstance.get("/Voucher"),
   getById: (id) => axiosInstance.get(`/Voucher/id/${id}`),
   create: (voucherData) => axiosInstance.post("/Voucher", voucherData),
-  update: (id, voucherData) => axiosInstance.put(`/Voucher/${id}`, voucherData), // Sửa endpoint
+  update: (id, voucherData) => axiosInstance.put(`/Voucher/${id}`, voucherData),
   delete: (id) => axiosInstance.delete(`/Voucher/${id}`),
   checkAndDisable: () => axiosInstance.post("/Voucher/check-and-disable"),
 };
@@ -66,6 +66,10 @@ export const transactionApi = {
 
 export const userApi = {
   getUserById: (userId) => axiosInstance.get(`/users/${userId}`),
+};
+
+export const authApi = {
+  logout: () => axiosInstance.post("/auth/logout"),
 };
 
 export default axiosInstance;

@@ -1,11 +1,11 @@
-import React, { useState, memo } from "react"; // Thêm memo
+import React, { useState, useEffect, memo } from "react";
 import { Menu, X } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/dashboard/Header";
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
+import { courseApi, voucherApi } from "../api/axiosInstance";
 
-// Memo hóa Outlet để tránh re-render không cần thiết
 const MemoizedOutlet = memo(
   () => <Outlet />,
   () => true
@@ -13,36 +13,80 @@ const MemoizedOutlet = memo(
 
 const AdminPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState([]);
+  const [vouchers, setVouchers] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [coursesResponse, vouchersResponse] = await Promise.all([
+          courseApi.getAll(),
+          voucherApi.getAll(),
+        ]);
+
+        setCourses(coursesResponse?.result || coursesResponse || []);
+        setVouchers(vouchersResponse?.result || vouchersResponse || []);
+      } catch (err) {
+        setError("Failed to load data: " + err.message);
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (error) {
+    return (
+      <motion.div
+        className="container mx-auto px-4 py-8 text-red-500"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {error}
+      </motion.div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Nút toggle cho mobile */}
       <MobileToggle sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <motion.div
-        initial={{ x: -256 }}
-        animate={{ x: sidebarOpen ? 0 : -256 }}
-        transition={{ duration: 0.3 }}
-        className="fixed lg:static z-40"
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 left-0 h-screen z-40 ${
+          sidebarOpen ? "block" : "hidden lg:block"
+        }`}
       >
         <Sidebar
           isCollapsed={!sidebarOpen}
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          loading={loading}
+          courseCount={courses.length}
+          voucherCount={vouchers.length}
         />
-      </motion.div>
+      </div>
 
+      {/* Nội dung chính */}
       <div
         className={`flex-1 overflow-auto transition-all duration-300 ${
           sidebarOpen ? "lg:ml-64" : "lg:ml-16"
         }`}
       >
-        <Header />
+        <Header className="w-full fixed top-0 left-0 z-30" />
         <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
           className="pt-16 p-6 min-h-screen overflow-auto"
         >
-          <MemoizedOutlet /> {/* Sử dụng phiên bản memo hóa */}
+          <MemoizedOutlet context={{ loading, courses, vouchers }} />
         </motion.main>
       </div>
     </div>
