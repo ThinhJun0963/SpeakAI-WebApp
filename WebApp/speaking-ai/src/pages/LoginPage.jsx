@@ -3,14 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
-import { Modal } from "antd";
-import { useAuth } from "../components/hooks/useAuth";
 import InputField from "../components/login/InputField";
 import LoadingButton from "../components/login/LoadingButton";
 import ErrorMessage from "../components/login/ErrorMessage";
+import { useAuth } from "../components/hooks/useAuth";
+import useModal from "../components/hooks/useModal";
 
 const LoginPage = () => {
   const { login, loginWithGoogle, error } = useAuth();
+  const { showSuccess, showError } = useModal();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -26,21 +27,11 @@ const LoginPage = () => {
     setLoadingNormal(true);
     try {
       const role = await login(formData);
-      Modal.success({
-        title: "Success",
-        content: "Login successful!",
-        centered: true,
-        okButtonProps: {
-          style: { background: "#52c41a", borderColor: "#52c41a" },
-        },
-      });
-      navigateBasedOnRole(role);
+      showSuccess("Success", "Login successful!", () =>
+        navigateBasedOnRole(role)
+      );
     } catch (err) {
-      Modal.error({
-        title: "Error",
-        content: error || "Login failed. Please try again.",
-        centered: true,
-      });
+      showError("Error", error || "Login failed. Please try again.");
     } finally {
       setLoadingNormal(false);
     }
@@ -50,32 +41,21 @@ const LoginPage = () => {
     setLoadingGoogle(true);
     try {
       const role = await loginWithGoogle(response.credential);
-      Modal.success({
-        title: "Success",
-        content: "Logged in with Google successfully!",
-        centered: true,
-        okButtonProps: {
-          style: { background: "#52c41a", borderColor: "#52c41a" },
-        },
-      });
-      navigateBasedOnRole(role);
+      showSuccess("Success", "Logged in with Google successfully!", () =>
+        navigateBasedOnRole(role)
+      );
     } catch (err) {
-      Modal.error({
-        title: "Error",
-        content: err.message || "Google login failed. Please try again.",
-        centered: true,
-      });
+      showError(
+        "Error",
+        err.message || "Google login failed. Please try again."
+      );
     } finally {
       setLoadingGoogle(false);
     }
   };
 
   const handleGoogleError = () => {
-    Modal.error({
-      title: "Error",
-      content: "Google login failed. Please try again.",
-      centered: true,
-    });
+    showError("Error", "Google login failed. Please try again.");
   };
 
   const navigateBasedOnRole = (role) => {
@@ -113,7 +93,7 @@ const LoginPage = () => {
 
           {error && <ErrorMessage message={error} />}
 
-          <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+          <form onSubmit={handleSubmit} className="space-y-3 mt-6">
             <InputField
               id="username"
               name="username"
@@ -124,29 +104,39 @@ const LoginPage = () => {
               placeholder="Username"
               required
             />
-            <InputField
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              icon={Lock}
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Password"
-              required
-              endIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
+            <div>
+              <InputField
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                icon={Lock}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                required
+                endIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                }
+              />
+              <p className="mt-2 text-right text-sm text-gray-600">
+                <a
+                  href="/forgot-password"
+                  className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              }
-            />
+                  Forgot your password?
+                </a>
+              </p>
+            </div>
             <LoadingButton
               loading={loadingNormal}
               text="Log In"
@@ -154,7 +144,7 @@ const LoginPage = () => {
             />
           </form>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-4">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
@@ -162,6 +152,7 @@ const LoginPage = () => {
               theme="outline"
               text="signin_with"
               shape="pill"
+              disabled={loadingGoogle}
             />
           </div>
 

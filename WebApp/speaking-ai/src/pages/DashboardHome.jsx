@@ -21,7 +21,7 @@ const DashboardHome = () => {
 
         // Fetch all courses
         const coursesResponse = await courseApi.getAll();
-        const courses = coursesResponse || [];
+        const courses = coursesResponse?.result || coursesResponse || []; // Xử lý response từ interceptor
 
         // Calculate various statistics
         const totalCourses = courses.length;

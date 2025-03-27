@@ -2,22 +2,31 @@ import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock } from "lucide-react";
-import { Modal, Input } from "antd";
+import { Input, Modal } from "antd";
 import InputField from "../components/login/InputField";
 import LoadingButton from "../components/login/LoadingButton";
 import ErrorMessage from "../components/login/ErrorMessage";
-import { useAuth } from "../components/hooks/useAuth"; // Đã sửa đường dẫn
+import { useAuth } from "../components/hooks/useAuth";
+import useModal from "../components/hooks/useModal";
+import { validatePassword } from "../utils/validation";
 
 const ForgotPasswordPage = () => {
   const { forgotPassword, resetPassword } = useAuth();
+  const {
+    visible,
+    showModal,
+    hideModal,
+    showSuccess,
+    showError,
+    loading,
+    setLoading,
+  } = useModal();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [redirect, setRedirect] = useState(false);
-  const [otpModalVisible, setOtpModalVisible] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -25,22 +34,17 @@ const ForgotPasswordPage = () => {
     setError(null);
     try {
       const message = await forgotPassword(email);
-      setOtpModalVisible(true);
-      Modal.success({
-        title: "Success",
-        content: message || "A reset OTP has been sent to your email.",
-        centered: true,
-        okButtonProps: {
-          style: { background: "#52c41a", borderColor: "#52c41a" },
-        },
-      });
+      showModal();
+      showSuccess(
+        "Success",
+        message || "A reset OTP has been sent to your email."
+      );
     } catch (err) {
       setError(err.message || "Failed to send reset email. Please try again.");
-      Modal.error({
-        title: "Error",
-        content: err.message || "Failed to send reset email. Please try again.",
-        centered: true,
-      });
+      showError(
+        "Error",
+        err.message || "Failed to send reset email. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -50,12 +54,10 @@ const ForgotPasswordPage = () => {
     setLoading(true);
     setError(null);
 
-    // Kiểm tra password trước khi gửi
-    const passwordRegex = /^(?!.*\s)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/;
-    if (!passwordRegex.test(newPassword)) {
-      setError(
-        "Password must have 8-20 characters, at least 1 special character, and no spaces."
-      );
+    // Kiểm tra password
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      setError(passwordError);
       setLoading(false);
       return;
     }
@@ -73,23 +75,18 @@ const ForgotPasswordPage = () => {
         confirmPassword,
         email,
       });
-      Modal.success({
-        title: "Success",
-        content: message || "Your password has been reset successfully!",
-        centered: true,
-        okButtonProps: {
-          style: { background: "#52c41a", borderColor: "#52c41a" },
-        },
-        onOk: () => setRedirect(true),
-      });
-      setOtpModalVisible(false);
+      showSuccess(
+        "Success",
+        message || "Your password has been reset successfully!",
+        () => setRedirect(true)
+      );
+      hideModal();
     } catch (err) {
       setError(err.message || "Failed to reset password. Please try again.");
-      Modal.error({
-        title: "Error",
-        content: err.message || "Failed to reset password. Please try again.",
-        centered: true,
-      });
+      showError(
+        "Error",
+        err.message || "Failed to reset password. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -155,12 +152,11 @@ const ForgotPasswordPage = () => {
         </div>
       </motion.div>
 
-      {/* Modal để nhập OTP và mật khẩu mới */}
       <Modal
         title="Reset Password"
-        open={otpModalVisible}
+        open={visible}
         onOk={handleResetSubmit}
-        onCancel={() => setOtpModalVisible(false)}
+        onCancel={hideModal}
         okText="Reset Password"
         cancelText="Cancel"
         centered

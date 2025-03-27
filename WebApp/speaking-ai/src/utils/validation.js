@@ -1,25 +1,7 @@
-export const validateCourse = (courseData) => {
-  const errors = {};
-
-  if (!courseData.courseName?.trim()) {
-    errors.courseName = "Course name is required";
+export const validatePassword = (password) => {
+  const passwordRegex = /^(?!.*\s)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/;
+  if (!passwordRegex.test(password)) {
+    return "Password must have 8-20 characters, at least 1 special character, and no spaces.";
   }
-
-  if (!courseData.description?.trim()) {
-    errors.description = "Description is required";
-  }
-
-  if (courseData.maxPoint < 0) {
-    errors.maxPoint = "Max points cannot be negative";
-  }
-
-  if (!courseData.levelId) {
-    errors.levelId = "Please select a level";
-  }
-
-  if (!courseData.topics?.length) {
-    errors.topics = "At least one topic is required";
-  }
-
-  return errors;
+  return null;
 };

@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, Lock, Mail, Calendar, UserPlus } from "lucide-react";
-import { Modal, Input } from "antd";
 import InputField from "../components/login/InputField";
 import LoadingButton from "../components/login/LoadingButton";
 import ErrorMessage from "../components/login/ErrorMessage";
 import { useAuth } from "../components/hooks/useAuth";
+import useModal from "../components/hooks/useModal";
+import { validatePassword } from "../utils/validation";
 
 const SignUpPage = () => {
-  const { register, verifyOtp } = useAuth();
+  const { register } = useAuth();
+  const { showSuccess, showError } = useModal();
   const [formData, setFormData] = useState({
     userName: "",
     password: "",
@@ -22,9 +24,6 @@ const SignUpPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [redirect, setRedirect] = useState(false);
-  const [otpModalVisible, setOtpModalVisible] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [userId, setUserId] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,12 +34,10 @@ const SignUpPage = () => {
     setLoading(true);
     setError(null);
 
-    // Kiểm tra password trước khi gửi
-    const passwordRegex = /^(?!.*\s)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/;
-    if (!passwordRegex.test(formData.password)) {
-      setError(
-        "Password must have 8-20 characters, at least 1 special character, and no spaces."
-      );
+    // Kiểm tra password
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setError(passwordError);
       setLoading(false);
       return;
     }
@@ -52,52 +49,18 @@ const SignUpPage = () => {
     }
 
     try {
-      const { userId } = await register(formData);
-      setUserId(userId);
-      setOtpModalVisible(true);
-      Modal.success({
-        title: "Success",
-        content:
-          "Registration successful! Please check your email to verify your account.",
-        centered: true,
-        okButtonProps: {
-          style: { background: "#52c41a", borderColor: "#52c41a" },
-        },
-      });
+      await register(formData);
+      showSuccess(
+        "Success",
+        "Registration successful! Please log in to continue.",
+        () => setRedirect(true)
+      );
     } catch (err) {
       setError(err.message || "Registration failed. Please check your input.");
-      Modal.error({
-        title: "Error",
-        content: err.message || "Registration failed. Please check your input.",
-        centered: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpSubmit = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await verifyOtp({ userId, otpCode: otp });
-      Modal.success({
-        title: "Success",
-        content: "Account verified successfully! Please log in.",
-        centered: true,
-        okButtonProps: {
-          style: { background: "#52c41a", borderColor: "#52c41a" },
-        },
-        onOk: () => setRedirect(true),
-      });
-      setOtpModalVisible(false);
-    } catch (err) {
-      setError(err.message || "OTP verification failed. Please try again.");
-      Modal.error({
-        title: "Error",
-        content: err.message || "OTP verification failed. Please try again.",
-        centered: true,
-      });
+      showError(
+        "Error",
+        err.message || "Registration failed. Please check your input."
+      );
     } finally {
       setLoading(false);
     }
@@ -220,30 +183,6 @@ const SignUpPage = () => {
           </p>
         </div>
       </motion.div>
-
-      {/* Modal để nhập OTP */}
-      <Modal
-        title="Verify OTP"
-        open={otpModalVisible}
-        onOk={handleOtpSubmit}
-        onCancel={() => setOtpModalVisible(false)}
-        okText="Verify"
-        cancelText="Cancel"
-        centered
-        okButtonProps={{
-          style: { background: "#52c41a", borderColor: "#52c41a" },
-          disabled: loading,
-        }}
-      >
-        <p>An OTP has been sent to your email. Please enter it below:</p>
-        <Input
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          placeholder="Enter OTP"
-          maxLength={6}
-          style={{ marginTop: 16 }}
-        />
-      </Modal>
     </div>
   );
 };
