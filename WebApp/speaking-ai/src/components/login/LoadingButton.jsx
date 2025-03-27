@@ -1,15 +1,21 @@
+import React from "react";
+import { motion } from "framer-motion";
 
 const LoadingButton = ({ loading, text, loadingText }) => {
   return (
-    <button
+    <motion.button
       type="submit"
       disabled={loading}
-      className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
+      className={`w-full py-3 px-4 rounded-lg font-medium text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 ${
+        loading ? "opacity-75 cursor-not-allowed" : ""
+      }`}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
       {loading ? (
-        <>
+        <div className="flex items-center justify-center">
           <svg
-            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+            className="animate-spin h-5 w-5 mr-2 text-white"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -29,11 +35,11 @@ const LoadingButton = ({ loading, text, loadingText }) => {
             />
           </svg>
           {loadingText}
-        </>
+        </div>
       ) : (
         text
       )}
-    </button>
+    </motion.button>
   );
 };
 
