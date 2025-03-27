@@ -1,23 +1,76 @@
 import React from "react";
-import { Bell } from "lucide-react";
+import { ChevronDown, User, LogOut } from "lucide-react";
+import { Dropdown, Menu, Input, Avatar, Modal } from "antd";
+import { useNavigate } from "react-router-dom";
+import { authApi } from "../../api/axiosInstance";
 
-const Header = () => {
+const Header = ({ className }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    Modal.confirm({
+      title: "Confirm logout",
+      content: "Are you sure you want to log out?",
+      okText: "Yes",
+      cancelText: "No",
+      onOk: async () => {
+        try {
+          // Call the logout API
+          await authApi.logout();
+          // Clear the token from localStorage
+          localStorage.removeItem("token");
+          // Redirect to login page
+          navigate("/login");
+        } catch (error) {
+          console.error("Logout failed:", error);
+          Modal.error({
+            title: "Error",
+            content: "Failed to logout. Please try again.",
+          });
+        }
+      },
+    });
+  };
+
+  const profileMenu = (
+    <Menu className="w-48">
+      <Menu.Item key="profile" icon={<User className="h-4 w-4" />}>
+        Profile
+      </Menu.Item>
+      <Menu.Item
+        key="logout"
+        icon={<LogOut className="h-4 w-4" />}
+        onClick={handleLogout} // Update to call handleLogout
+      >
+        Logout
+      </Menu.Item>
+    </Menu>
+  );
+
   return (
-    <header className="bg-white shadow-sm p-4 fixed top-0 w-full z-30">
+    <header
+      className={`bg-white shadow-sm p-4 border-b border-gray-100 ${className}`}
+    >
       <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <div />
+        <div className="flex items-center space-x-4"></div>
+
+        {/* Profile */}
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Bell className="h-6 w-6 text-gray-600 cursor-pointer transition-transform duration-300 hover:scale-110" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 hover:scale-110"></span>
-          </div>
-          <div className="flex items-center space-x-2 cursor-pointer transition-transform duration-300 hover:scale-105">
-            <img
-              alt="Admin"
-              className="h-8 w-8 rounded-full transition-transform duration-300 hover:scale-110"
-            />
-            <span className="font-medium">Admin</span>
-          </div>
+          <Dropdown
+            overlay={profileMenu}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <div className="flex items-center space-x-2 cursor-pointer hover:scale-105 transition-transform duration-300">
+              <Avatar
+                src="https://i.pravatar.cc/150?img=3"
+                size={32}
+                className="hover:scale-110 transition-transform duration-300"
+              />
+              <span className="font-medium text-gray-700">Admin</span>
+              <ChevronDown className="h-4 w-4 text-gray-600" />
+            </div>
+          </Dropdown>
         </div>
       </div>
     </header>

@@ -1,20 +1,10 @@
-import React from "react";
-import { Form, Input, Select, Checkbox, Button, Tooltip } from "antd";
-import { InfoCircleOutlined } from "@ant-design/icons";
+import { Form, Input, Select, Checkbox, Button } from "antd";
+import {
+  MAX_POINT_OPTIONS,
+  LEVEL_OPTIONS,
+} from "../../constants/courseOptions";
 
 const { Option } = Select;
-
-const POINT_OPTIONS = [
-  { value: 90, label: "90 points" },
-  { value: 100, label: "100 points" },
-  { value: 200, label: "200 points" },
-];
-
-const LEVEL_OPTIONS = [
-  { value: 1, label: "Beginner" },
-  { value: 2, label: "Intermediate" },
-  { value: 3, label: "Advanced" },
-];
 
 export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
   const [form] = Form.useForm();
@@ -30,17 +20,11 @@ export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
       initialValues={courseData}
       onValuesChange={handleValuesChange}
       onFinish={onNext}
+      className="space-y-4"
     >
       <Form.Item
         name="courseName"
-        label={
-          <span>
-            Course Name{" "}
-            <Tooltip title="Enter a unique name for the course">
-              <InfoCircleOutlined />
-            </Tooltip>
-          </span>
-        }
+        label="Course Name"
         rules={[{ required: true, message: "Please enter course name" }]}
       >
         <Input placeholder="Enter course name" />
@@ -58,7 +42,7 @@ export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
         rules={[{ required: true, message: "Please select max point" }]}
       >
         <Select placeholder="Select max point">
-          {POINT_OPTIONS.map((option) => (
+          {MAX_POINT_OPTIONS.map((option) => (
             <Option key={option.value} value={option.value}>
               {option.label}
             </Option>
@@ -81,7 +65,7 @@ export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
       <Form.Item name="isPremium" valuePropName="checked">
         <Checkbox>Premium</Checkbox>
       </Form.Item>
-      <div className="flex justify-between pt-6">
+      <div className="flex justify-end space-x-2">
         <Button onClick={onCancel}>Cancel</Button>
         <Button type="primary" htmlType="submit">
           Next

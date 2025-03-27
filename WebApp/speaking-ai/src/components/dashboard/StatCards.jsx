@@ -1,86 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Tag, CheckCircle, DollarSign } from "lucide-react";
 import { Card, CardContent } from "../ui/Card";
-import { courseApi } from "../../api/axiosInstance";
-import { voucherApi } from "../../api/axiosInstance";
 
-const StatCards = () => {
-  const [stats, setStats] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [coursesResponse, vouchersResponse] = await Promise.all([
-          courseApi.getAll(),
-          voucherApi.getAll(),
-        ]);
-
-        const courses = Array.isArray(coursesResponse) ? coursesResponse : [];
-        const vouchers = Array.isArray(vouchersResponse)
-          ? vouchersResponse
-          : [];
-
-        const dynamicStats = [
-          {
-            title: "Total Courses",
-            value: courses.length,
-            change:
-              courses.length > 0 ? `+${Math.round(courses.length / 10)}` : "0",
-            borderColor: "border-blue-200",
-            bgColor: "bg-blue-500",
-            icon: BookOpen,
-            iconColor: "text-white",
-          },
-          {
-            title: "Active Vouchers",
-            value: vouchers.filter((v) => v.isActive).length,
-            change: vouchers.some((v) => v.isActive) ? "+1" : "0",
-            borderColor: "border-purple-200",
-            bgColor: "bg-purple-500",
-            icon: Tag,
-            iconColor: "text-white",
-          },
-          {
-            title: "Active Courses",
-            value: courses.filter((c) => c.isActive).length,
-            change: courses.some((c) => c.isActive)
-              ? `+${Math.round(courses.length / 20)}`
-              : "0",
-            borderColor: "border-green-200",
-            bgColor: "bg-green-500",
-            icon: CheckCircle,
-            iconColor: "text-white",
-          },
-          {
-            title: "Total Discounts",
-            value:
-              vouchers.reduce(
-                (sum, v) => sum + (v.discountPercentage || 0),
-                0
-              ) + "%",
-            change:
-              vouchers.length > 0
-                ? `+${Math.round(vouchers.length * 5)}%`
-                : "0%",
-            borderColor: "border-orange-200",
-            bgColor: "bg-orange-500",
-            icon: DollarSign,
-            iconColor: "text-white",
-          },
-        ];
-
-        setStats(dynamicStats);
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
+const StatCards = ({ courses, vouchers }) => {
+  const stats = [
+    {
+      title: "Total Courses",
+      value: courses.length,
+      change: courses.length > 0 ? `+${Math.round(courses.length / 10)}` : "0",
+      borderColor: "border-blue-200",
+      bgColor: "bg-blue-500",
+      icon: BookOpen,
+      iconColor: "text-white",
+    },
+    {
+      title: "Active Vouchers",
+      value: vouchers.filter((v) => v.isActive).length,
+      change: vouchers.some((v) => v.isActive) ? "+1" : "0",
+      borderColor: "border-purple-200",
+      bgColor: "bg-purple-500",
+      icon: Tag,
+      iconColor: "text-white",
+    },
+    {
+      title: "Active Courses",
+      value: courses.filter((c) => c.isActive).length,
+      change: courses.some((c) => c.isActive)
+        ? `+${Math.round(courses.length / 20)}`
+        : "0",
+      borderColor: "border-green-200",
+      bgColor: "bg-green-500",
+      icon: CheckCircle,
+      iconColor: "text-white",
+    },
+    {
+      title: "Total Discounts",
+      value:
+        vouchers.reduce((sum, v) => sum + (v.discountPercentage || 0), 0) + "%",
+      change:
+        vouchers.length > 0 ? `+${Math.round(vouchers.length * 5)}%` : "0%",
+      borderColor: "border-orange-200",
+      bgColor: "bg-orange-500",
+      icon: DollarSign,
+      iconColor: "text-white",
+    },
+  ];
 
   const cardVariants = {
     hover: {
@@ -94,10 +59,6 @@ const StatCards = () => {
     hover: { color: "#2563eb", transition: { duration: 0.3 } },
     initial: { color: "#111827" },
   };
-
-  if (loading) {
-    return <div className="text-center py-4">Loading stats...</div>;
-  }
 
   return (
     <section>

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://sai.runasp.net/api",
   headers: { "Content-Type": "application/json" },
 });
 
@@ -9,6 +9,7 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    console.log("Request config:", config);
     return config;
   },
   (error) => Promise.reject(error)
@@ -16,7 +17,10 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => response.data.result || response.data,
-  (error) => Promise.reject(error.response?.data || error)
+  (error) => {
+    console.log("Response error:", error.response?.data || error);
+    return Promise.reject(error.response?.data || error);
+  }
 );
 
 export const courseApi = {
@@ -45,9 +49,9 @@ export const voucherApi = {
   getAll: () => axiosInstance.get("/Voucher"),
   getById: (id) => axiosInstance.get(`/Voucher/id/${id}`),
   create: (voucherData) => axiosInstance.post("/Voucher", voucherData),
-  update: (id, voucherData) =>
-    axiosInstance.put(`/Voucher/id/${id}`, voucherData),
-  delete: (id) => axiosInstance.delete(`/Voucher/id/${id}`),
+  update: (id, voucherData) => axiosInstance.put(`/Voucher/${id}`, voucherData),
+  delete: (id) => axiosInstance.delete(`/Voucher/${id}`),
+  checkAndDisable: () => axiosInstance.post("/Voucher/check-and-disable"),
 };
 
 export const transactionApi = {
@@ -62,6 +66,10 @@ export const transactionApi = {
 
 export const userApi = {
   getUserById: (userId) => axiosInstance.get(`/users/${userId}`),
+};
+
+export const authApi = {
+  logout: () => axiosInstance.post("/auth/logout"),
 };
 
 export default axiosInstance;

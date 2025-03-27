@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { courseApi } from "../../api/axiosInstance";
 import { Form, Input, Select, Button, Modal, Tabs, Skeleton } from "antd";
+import {
+  MAX_POINT_OPTIONS,
+  LEVEL_OPTIONS,
+} from "../../constants/courseOptions";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -11,12 +15,6 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
   const [fetchLoading, setFetchLoading] = useState(false);
   const [courseData, setCourseData] = useState(null);
   const [topics, setTopics] = useState([]);
-  const maxPointOptions = [100, 200, 300, 400, 500];
-  const levelOptions = [
-    { id: 1, name: "Beginner" },
-    { id: 2, name: "Intermediate" },
-    { id: 3, name: "Advanced" },
-  ];
 
   const parseExerciseContent = (content) => {
     try {
@@ -75,9 +73,22 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
     }
   }, [visible, courseId, form]);
 
+  const handleMaxPointChange = (newMaxPoint) => {
+    const updatedTopics = topics.map((topic) => {
+      const newTopicMaxPoint = newMaxPoint / topics.length;
+      const exercises = topic.exercises.map((exercise) => ({
+        ...exercise,
+        maxPoint: newTopicMaxPoint / topic.exercises.length,
+      }));
+      return { ...topic, maxPoint: newTopicMaxPoint, exercises };
+    });
+    setTopics(updatedTopics);
+  };
+
   const handleFinish = async (values) => {
     setLoading(true);
     try {
+      // Cập nhật course
       await courseApi.update(courseId, {
         courseName: values.courseName,
         description: values.description,
@@ -86,9 +97,11 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
         levelId: values.levelId,
       });
 
+      // Cập nhật topics và exercises với maxPoint mới
       const topicPromises = topics.map((topic) =>
         courseApi.updateTopic(topic.id, {
           topicName: topic.topicName,
+          maxPoint: topic.maxPoint,
           isActive: topic.isActive !== undefined ? topic.isActive : true,
         })
       );
@@ -97,6 +110,7 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
         topic.exercises.map((exercise) =>
           courseApi.updateExercise(exercise.id, {
             content: JSON.stringify(exercise.content),
+            maxPoint: exercise.maxPoint,
           })
         )
       );
@@ -147,6 +161,11 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
               form={form}
               layout="vertical"
               onFinish={handleFinish}
+              onValuesChange={(changedValues) => {
+                if (changedValues.maxPoint) {
+                  handleMaxPointChange(changedValues.maxPoint);
+                }
+              }}
               className="space-y-4 p-4"
             >
               <Form.Item
@@ -173,9 +192,9 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
                 rules={[{ required: true, message: "Please select max point" }]}
               >
                 <Select placeholder="Select max point">
-                  {maxPointOptions.map((point) => (
-                    <Option key={point} value={point}>
-                      {point}
+                  {MAX_POINT_OPTIONS.map((option) => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
                     </Option>
                   ))}
                 </Select>
@@ -186,9 +205,9 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
                 rules={[{ required: true, message: "Please select level" }]}
               >
                 <Select placeholder="Select level">
-                  {levelOptions.map((level) => (
-                    <Option key={level.id} value={level.id}>
-                      {level.name}
+                  {LEVEL_OPTIONS.map((option) => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
                     </Option>
                   ))}
                 </Select>

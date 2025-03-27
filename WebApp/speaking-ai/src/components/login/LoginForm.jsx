@@ -94,7 +94,7 @@ const LoginForm = ({
         <div className="relative flex items-center justify-center">
           <div className="border-t border-gray-300 absolute w-full"></div>
           <div className="px-2 bg-white relative z-10 text-sm text-gray-500">
-            Hoặc
+            Or
           </div>
         </div>
 
@@ -123,7 +123,7 @@ const LoginForm = ({
                 fill="#EA4335"
               />
             </svg>
-            Đăng nhập với Google
+            Sign in with Google
           </span>
         </button>
       </div>

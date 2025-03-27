@@ -11,7 +11,7 @@ export const CourseCreationSteps = ({ onComplete, onCancel }) => {
   const [courseData, setCourseData] = useState({
     courseName: "",
     description: "",
-    maxPoint: 90,
+    maxPoint: 100,
     isFree: true,
     isPremium: false,
     levelId: 1,
@@ -26,7 +26,7 @@ export const CourseCreationSteps = ({ onComplete, onCancel }) => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await courseApi.create(courseData); 
+      await courseApi.create(courseData);
       onComplete();
     } catch (err) {
       setError(err.message || "Failed to create course");

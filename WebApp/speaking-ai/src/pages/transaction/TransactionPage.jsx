@@ -1,4 +1,3 @@
-// pages/transaction/TransactionPage.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { transactionApi, userApi } from "../../api/axiosInstance";
 import {
@@ -15,11 +14,84 @@ import {
   Modal,
 } from "antd";
 import { Search } from "lucide-react";
+import { motion } from "framer-motion";
 import debounce from "lodash/debounce";
 import { Line, Pie } from "@ant-design/plots";
 import moment from "moment";
 
 const { Option } = Select;
+
+// Variants cho hiệu ứng load của container chính
+const containerVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+      when: "beforeChildren",
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+// Variants cho các thành phần con
+const childVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+// Skeleton cho Statistics Cards
+const StatisticsCardsSkeleton = () => (
+  <Row gutter={[16, 16]} className="mb-6">
+    {[...Array(3)].map((_, index) => (
+      <Col key={index} xs={24} sm={12} md={8}>
+        <Card>
+          <Skeleton active paragraph={false} title={{ width: "50%" }} />
+          <Skeleton active paragraph={false} title={{ width: "30%" }} />
+        </Card>
+      </Col>
+    ))}
+  </Row>
+);
+
+// Skeleton cho Charts
+const ChartsSkeleton = () => (
+  <Row gutter={[16, 16]} className="mb-6">
+    <Col xs={24} md={12}>
+      <Card title="Status Distribution">
+        <Skeleton active paragraph={{ rows: 4 }} title={false} />
+      </Card>
+    </Col>
+    <Col xs={24} md={12}>
+      <Card title="Revenue Over Time (VND)">
+        <Skeleton active paragraph={{ rows: 4 }} title={false} />
+      </Card>
+    </Col>
+  </Row>
+);
+
+// Skeleton cho Transaction Table (bao gồm search bar, status filter, table, và pagination)
+const TransactionTableSkeleton = () => (
+  <div>
+    <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+      <Skeleton active paragraph={false} title={{ width: "30%" }} />
+      <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <Skeleton.Input active style={{ width: 256, height: 40 }} />
+        <Skeleton.Input active style={{ width: 128, height: 40 }} />
+      </div>
+    </div>
+    <Skeleton active paragraph={{ rows: 5 }} />
+    <div className="text-center mt-4">
+      <Skeleton.Button active style={{ width: 200, height: 32 }} />
+    </div>
+  </div>
+);
 
 const TransactionPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -45,7 +117,6 @@ const TransactionPage = () => {
       const data = response.result || {};
       const transactionList = data.items || [];
 
-      // Lọc bỏ các giao dịch có status không hợp lệ
       const validTransactions = transactionList.filter(
         (transaction) =>
           transaction.status && typeof transaction.status === "string"
@@ -57,7 +128,7 @@ const TransactionPage = () => {
           const userResponse = await userApi.getUserById(userId);
           return {
             userId,
-            userName: userResponse.result.userName || "Unknown",
+            userName: userResponse.userName || "Unknown",
           };
         } catch (error) {
           console.error(`Failed to fetch user ${userId}:`, error);
@@ -131,9 +202,8 @@ const TransactionPage = () => {
     (sum, transaction) => sum + (transaction.amount || 0),
     0
   );
-
   const statusDistribution = transactions.reduce((acc, transaction) => {
-    const status = transaction.status;
+    const status = transaction.status || "Unknown";
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {});
@@ -192,7 +262,7 @@ const TransactionPage = () => {
             ? "yellow"
             : status === "Failed"
             ? "red"
-            : "gray"; // Màu mặc định cho "Unknown"
+            : "gray";
         return <Tag color={color}>{status || "Unknown"}</Tag>;
       },
     },
@@ -205,188 +275,206 @@ const TransactionPage = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-        Transaction Management
-      </h1>
+    <motion.div
+      className="container mx-auto px-4 py-8 max-w-7xl"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={childVariants}>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
+          Transaction Management
+        </h1>
+      </motion.div>
 
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic
-              title="Total Revenue (VND)"
-              value={totalRevenue / 1000}
-              precision={1}
-              prefix="₫"
-              valueStyle={{ color: "#3f8600" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic
-              title="Pending Transactions"
-              value={statusDistribution.Pending || 0}
-              valueStyle={{ color: "#faad14" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic
-              title="Completed Transactions"
-              value={statusDistribution.Paid || 0}
-              valueStyle={{ color: "#52c41a" }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Statistics Cards */}
+      <motion.div variants={childVariants}>
+        {loading ? (
+          <StatisticsCardsSkeleton />
+        ) : (
+          <Row gutter={[16, 16]} className="mb-6">
+            <Col xs={24} sm={12} md={8}>
+              <Card>
+                <Statistic
+                  title="Total Revenue (VND)"
+                  value={totalRevenue / 1000}
+                  precision={1}
+                  prefix="₫"
+                  valueStyle={{ color: "#3f8600" }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Card>
+                <Statistic
+                  title="Pending Transactions"
+                  value={statusDistribution.Pending || 0}
+                  valueStyle={{ color: "#faad14" }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Card>
+                <Statistic
+                  title="Completed Transactions"
+                  value={statusDistribution.Paid || 0}
+                  valueStyle={{ color: "#52c41a" }}
+                />
+              </Card>
+            </Col>
+          </Row>
+        )}
+      </motion.div>
 
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} md={12}>
-          <Card
-            title="Status Distribution"
-            styles={{
-              header: { backgroundColor: "#f0f2f5", fontWeight: "bold" },
-              body: { padding: "24px" },
-            }}
-          >
-            {statusChartData.length > 0 ? (
-              <Pie
-                data={statusChartData}
-                angleField="value"
-                colorField="type"
-                color={({ type }) =>
-                  type === "Paid"
-                    ? "#52c41a"
-                    : type === "Pending"
-                    ? "#faad14"
-                    : type === "Failed"
-                    ? "#ff4d4f"
-                    : "#d9d9d9"
-                }
-                radius={0.8}
-                innerRadius={0.6}
-                label={{
-                  offset: -20,
-                  content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
-                  style: { fontSize: 14, textAlign: "center", fill: "#fff" },
-                }}
-                statistic={{
-                  title: { content: "Transactions", style: { fontSize: 16 } },
-                  content: { style: { fontSize: 20 } },
-                }}
-                interactions={[
-                  { type: "element-active" },
-                  { type: "pie-legend-highlight" },
-                ]}
-              />
+      {/* Charts */}
+      <motion.div variants={childVariants}>
+        {loading ? (
+          <ChartsSkeleton />
+        ) : (
+          <Row gutter={[16, 16]} className="mb-6">
+            <Col xs={24} md={12}>
+              <Card title="Status Distribution">
+                {statusChartData.length > 0 ? (
+                  <Pie
+                    data={statusChartData}
+                    angleField="value"
+                    colorField="type"
+                    color={({ type }) =>
+                      type === "Paid"
+                        ? "#52c41a"
+                        : type === "Pending"
+                        ? "#faad14"
+                        : type === "Failed"
+                        ? "#ff4d4f"
+                        : "#d9d9d9"
+                    }
+                    radius={0.8}
+                    innerRadius={0.6}
+                    label={{
+                      offset: -20,
+                      content: ({ percent }) =>
+                        `${(percent * 100).toFixed(0)}%`,
+                      style: {
+                        fontSize: 14,
+                        textAlign: "center",
+                        fill: "#fff",
+                      },
+                    }}
+                    statistic={{
+                      title: {
+                        content: "Transactions",
+                        style: { fontSize: 16 },
+                      },
+                      content: { style: { fontSize: 20 } },
+                    }}
+                  />
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    No data available.
+                  </div>
+                )}
+              </Card>
+            </Col>
+            <Col xs={24} md={12}>
+              <Card title="Revenue Over Time (VND)">
+                {revenueChartData.length > 0 ? (
+                  <Line
+                    data={revenueChartData}
+                    xField="date"
+                    yField="amount"
+                    yAxis={{
+                      label: { formatter: (v) => `${(v / 1000).toFixed(1)}` },
+                    }}
+                    point={{
+                      size: 5,
+                      shape: "diamond",
+                      style: { fill: "#1890ff" },
+                    }}
+                    lineStyle={{ stroke: "#1890ff", lineWidth: 2 }}
+                    tooltip={{
+                      formatter: (datum) => ({
+                        name: "Revenue",
+                        value: `${(datum.amount / 1000).toFixed(1)} VND`,
+                      }),
+                    }}
+                    smooth
+                  />
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    No data available.
+                  </div>
+                )}
+              </Card>
+            </Col>
+          </Row>
+        )}
+      </motion.div>
+
+      {/* Transaction Table */}
+      <motion.div variants={childVariants}>
+        {loading ? (
+          <TransactionTableSkeleton />
+        ) : (
+          <>
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 sm:mb-0">
+                Transaction List
+              </h2>
+              <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <Input
+                  placeholder="Search by Username..."
+                  prefix={<Search className="h-4 w-4 text-gray-400" />}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full sm:w-64"
+                  disabled={loading}
+                />
+                <Select
+                  value={statusFilter}
+                  onChange={handleStatusFilter}
+                  className="w-full sm:w-32"
+                  disabled={loading}
+                >
+                  <Option value="All">All</Option>
+                  <Option value="Pending">Pending</Option>
+                  <Option value="Paid">Paid</Option>
+                  <Option value="Failed">Failed</Option>
+                </Select>
+              </div>
+            </div>
+
+            {transactions.length > 0 ? (
+              <>
+                <Table
+                  columns={columns}
+                  dataSource={filteredTransactions}
+                  rowKey={(record) => record.transactionId}
+                  pagination={false}
+                  scroll={{ x: "max-content" }}
+                  onChange={handleTableChange}
+                  className="mb-4"
+                />
+                <Pagination
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={totalCount}
+                  onChange={(page, size) => {
+                    setCurrentPage(page);
+                    setPageSize(size);
+                  }}
+                  showSizeChanger
+                  pageSizeOptions={["5", "10", "20"]}
+                  className="text-center"
+                />
+              </>
             ) : (
-              <div className="text-center py-4 text-gray-500">
-                No data available for Status Distribution.
+              <div className="text-center py-10 text-gray-500">
+                No transactions found.
               </div>
             )}
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card
-            title="Revenue Over Time (VND)"
-            styles={{
-              header: { backgroundColor: "#f0f2f5", fontWeight: "bold" },
-              body: { padding: "24px" },
-            }}
-          >
-            {revenueChartData.length > 0 ? (
-              <Line
-                data={revenueChartData}
-                xField="date"
-                yField="amount"
-                yAxis={{
-                  label: {
-                    formatter: (v) => `${(v / 1000).toFixed(1)}`,
-                  },
-                }}
-                point={{
-                  size: 5,
-                  shape: "diamond",
-                  style: { fill: "#1890ff" },
-                }}
-                lineStyle={{ stroke: "#1890ff", lineWidth: 2 }}
-                tooltip={{
-                  formatter: (datum) => ({
-                    name: "Revenue",
-                    value: `${(datum.amount / 1000).toFixed(1)} VND`,
-                  }),
-                }}
-                smooth
-              />
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                No data available for Revenue Over Time.
-              </div>
-            )}
-          </Card>
-        </Col>
-      </Row>
-
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 sm:mb-0">
-          Transaction List
-        </h2>
-        <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          <Input
-            placeholder="Search by Username..."
-            prefix={<Search className="h-4 w-4 text-gray-400" />}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full sm:w-64"
-            disabled={loading}
-          />
-          <Select
-            value={statusFilter}
-            onChange={handleStatusFilter}
-            className="w-full sm:w-32"
-            disabled={loading}
-          >
-            <Option value="All">All</Option>
-            <Option value="Pending">Pending</Option>
-            <Option value="Paid">Paid</Option>
-            <Option value="Failed">Failed</Option>
-          </Select>
-        </div>
-      </div>
-
-      {loading ? (
-        <Skeleton active paragraph={{ rows: 5 }} />
-      ) : transactions.length > 0 ? (
-        <>
-          <Table
-            columns={columns}
-            dataSource={filteredTransactions}
-            rowKey={(record) => record.transactionId}
-            pagination={false}
-            scroll={{ x: "max-content" }}
-            onChange={handleTableChange}
-            className="mb-4"
-          />
-          <Pagination
-            current={currentPage}
-            pageSize={pageSize}
-            total={totalCount}
-            onChange={(page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            }}
-            showSizeChanger
-            pageSizeOptions={["5", "10", "20"]}
-            className="text-center"
-          />
-        </>
-      ) : (
-        <div className="text-center py-10 text-gray-500">
-          No transactions found.
-        </div>
-      )}
-    </div>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
   );
 };
 

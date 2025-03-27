@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { courseApi } from "../../api/axiosInstance";
 import { Card, Modal, Button, Skeleton } from "antd";
 import { CourseForm } from "../../components/course/CourseForm";
@@ -11,50 +11,81 @@ import { useNavigate } from "react-router-dom";
 export const CreateCoursePage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [courseData, setCourseData] = useState(() => {
-    const savedData = localStorage.getItem("courseDraft");
-    return savedData
-      ? JSON.parse(savedData)
-      : {
-          courseName: "",
-          description: "",
-          maxPoint: 90,
-          isPremium: false,
-          levelId: 1,
-          topics: [],
-        };
+  const [courseData, setCourseData] = useState({
+    courseName: "",
+    description: "",
+    maxPoint: 90,
+    isPremium: false,
+    levelId: 1,
+    topics: [],
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem("courseDraft", JSON.stringify(courseData));
-  }, [courseData]);
-
-  const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
-  const handlePrev = () => setStep((prev) => Math.max(prev - 1, 1));
+  const resetForm = () => {
+    setCourseData({
+      courseName: "",
+      description: "",
+      maxPoint: 90,
+      isPremium: false,
+      levelId: 1,
+      topics: [],
+    });
+    setStep(1);
+  };
 
   const validateStep = (currentStep) => {
     if (currentStep === 1) {
       const { courseName, description, maxPoint, levelId } = courseData;
-      if (!courseName || !description || !maxPoint || !levelId) {
-        return false;
-      }
-    } else if (currentStep === 2 && courseData.topics.length === 0) {
-      return false;
-    } else if (
-      currentStep === 3 &&
-      courseData.topics.some((topic) => topic.exercises.length === 0)
-    ) {
-      return false;
+      return courseName && description && maxPoint && levelId;
+    }
+    if (currentStep === 2) {
+      return (
+        courseData.topics.length > 0 &&
+        courseData.topics.every((t) => t.topicName)
+      );
+    }
+    if (currentStep === 3) {
+      return courseData.topics.every(
+        (t) =>
+          t.exercises.length > 0 &&
+          t.exercises.every(
+            (e) => e.content.type && e.content.question && e.content.answer
+          )
+      );
     }
     return true;
+  };
+
+  const handleNext = () => {
+    if (!validateStep(step)) {
+      Modal.error({
+        title: "Validation Error",
+        content: "Please fill in all required fields before proceeding.",
+      });
+      return;
+    }
+    setStep((prev) => Math.min(prev + 1, 3));
+  };
+
+  const handlePrev = () => setStep((prev) => Math.max(prev - 1, 1));
+
+  const handleCancel = () => {
+    Modal.confirm({
+      title: "Cancel Creation",
+      content:
+        "Are you sure you want to cancel? All unsaved changes will be lost.",
+      onOk: () => {
+        resetForm();
+        navigate("/courses");
+      },
+    });
   };
 
   const handleSave = async () => {
     if (!validateStep(3)) {
       Modal.error({
         title: "Validation Error",
-        content: "Each topic must have at least one exercise.",
+        content: "Each topic must have at least one fully completed exercise.",
       });
       return;
     }
@@ -67,23 +98,18 @@ export const CreateCoursePage = () => {
         maxPoint: courseData.maxPoint,
         isPremium: courseData.isPremium,
         levelId: courseData.levelId,
-      };
-      const courseResponse = await courseApi.create(payload);
-      const courseId = courseResponse.id;
-
-      for (const topic of courseData.topics) {
-        const topicPayload = {
+        topics: courseData.topics.map((topic) => ({
           topicName: topic.topicName,
           maxPoint: topic.maxPoint,
           exercises: topic.exercises.map((exercise) => ({
             content: JSON.stringify(exercise.content),
             maxPoint: exercise.maxPoint,
           })),
-        };
-        await courseApi.addTopic(courseId, topicPayload);
-      }
+        })),
+      };
 
-      localStorage.removeItem("courseDraft");
+      await courseApi.create(payload);
+      resetForm(); // Reset form sau khi tạo thành công
       Modal.success({
         title: "Success",
         content: "Course created successfully!",
@@ -99,34 +125,16 @@ export const CreateCoursePage = () => {
     }
   };
 
-  const handleSaveDraft = () => {
-    localStorage.setItem("courseDraft", JSON.stringify(courseData));
-    Modal.success({
-      title: "Draft Saved",
-      content: "Your course draft has been saved.",
-    });
-  };
-
-  const handleStepChange = (direction) => {
-    if (direction === "next" && !validateStep(step)) {
-      Modal.error({
-        title: "Validation Error",
-        content: "Please fill in all required fields.",
-      });
-      return;
-    }
-    direction === "next" ? handleNext() : handlePrev();
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md max-w-4xl mx-auto"
+      className="p-6 max-w-4xl mx-auto"
     >
-      <Card>
+      <Card className="shadow-lg">
         <div className="p-6">
+          <h1 className="text-2xl font-bold mb-6">Create New Course</h1>
           <StepIndicator
             currentStep={step}
             onStepClick={setStep}
@@ -135,38 +143,34 @@ export const CreateCoursePage = () => {
           {loading ? (
             <Skeleton active paragraph={{ rows: 5 }} />
           ) : (
-            <>
+            <div className="min-h-[400px]">
               {step === 1 && (
                 <CourseForm
                   courseData={courseData}
                   setCourseData={setCourseData}
-                  onNext={() => handleStepChange("next")}
-                  onCancel={() => navigate("/courses")}
+                  onNext={handleNext}
+                  onCancel={handleCancel}
                 />
               )}
               {step === 2 && (
                 <TopicsForm
                   courseData={courseData}
                   setCourseData={setCourseData}
-                  onNext={() => handleStepChange("next")}
-                  onPrev={() => handleStepChange("prev")}
+                  onNext={handleNext}
+                  onPrev={handlePrev}
+                  onCancel={handleCancel}
                 />
               )}
               {step === 3 && (
                 <ExercisesForm
                   courseData={courseData}
                   setCourseData={setCourseData}
-                  onPrev={() => handleStepChange("prev")}
+                  onPrev={handlePrev}
                   onSave={handleSave}
-                  onSaveDraft={handleSaveDraft}
+                  onCancel={handleCancel}
                   loading={loading}
                 />
               )}
-            </>
-          )}
-          {step !== 3 && (
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleSaveDraft}>Save Draft</Button>
             </div>
           )}
         </div>

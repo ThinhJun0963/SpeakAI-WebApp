@@ -1,16 +1,82 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Skeleton } from "antd";
 import StatCards from "../components/dashboard/StatCards";
 import LearningCharts from "../components/dashboard/BookingCharts";
 import ActivityTable from "../components/dashboard/ActivityTable";
 import QuickActionCards from "../components/dashboard/QuickActionCards";
-import { courseApi } from "../api/axiosInstance";
-import { Loader2 } from "lucide-react";
+import { courseApi, voucherApi } from "../api/axiosInstance";
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+      when: "beforeChildren",
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const childVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+const StatCardsSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    {[...Array(4)].map((_, index) => (
+      <Skeleton
+        key={index}
+        active
+        avatar={{ shape: "square", size: "large" }}
+        paragraph={false}
+        title={{ width: "60%" }}
+        className="p-4 bg-white rounded-lg shadow"
+      />
+    ))}
+  </div>
+);
+
+const LearningChartsSkeleton = () => (
+  <div className="p-6 bg-white rounded-lg shadow">
+    <Skeleton active title={false} paragraph={{ rows: 4 }} />
+  </div>
+);
+
+const ActivityTableSkeleton = () => (
+  <div className="p-6 bg-white rounded-lg shadow">
+    <Skeleton active title={false} paragraph={{ rows: 5 }} />
+  </div>
+);
+
+const QuickActionCardsSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {[...Array(3)].map((_, index) => (
+      <Skeleton
+        key={index}
+        active
+        avatar={{ shape: "square", size: "large" }}
+        paragraph={false}
+        title={{ width: "80%" }}
+        className="p-4 bg-white rounded-lg shadow"
+      />
+    ))}
+  </div>
+);
 
 const DashboardHome = () => {
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
   const [courseData, setCourseData] = useState([]);
+  const [voucherData, setVoucherData] = useState([]); // Thêm state cho vouchers
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -19,11 +85,15 @@ const DashboardHome = () => {
       try {
         setLoading(true);
 
-        // Fetch all courses
-        const coursesResponse = await courseApi.getAll();
-        const courses = coursesResponse || [];
+        // Gọi cả courseApi và voucherApi cùng lúc
+        const [coursesResponse, vouchersResponse] = await Promise.all([
+          courseApi.getAll(),
+          voucherApi.getAll(),
+        ]);
 
-        // Calculate various statistics
+        const courses = coursesResponse?.result || coursesResponse || [];
+        const vouchers = vouchersResponse?.result || vouchersResponse || [];
+
         const totalCourses = courses.length;
         const activeCourses = courses.filter((c) => c.isActive).length;
         const premiumCourses = courses.filter((c) => c.isPremium).length;
@@ -33,12 +103,7 @@ const DashboardHome = () => {
                 courses.reduce((sum, c) => sum + c.maxPoint, 0) / courses.length
               ).toFixed(1)
             : 0;
-        const coursesByLevel = courses.reduce((acc, c) => {
-          acc[c.levelId] = (acc[c.levelId] || 0) + 1;
-          return acc;
-        }, {});
 
-        // Define stats
         const statsData = [
           {
             title: "Total Courses",
@@ -80,7 +145,6 @@ const DashboardHome = () => {
           },
         ];
 
-        // Fetch detailed data for recent activity (top 5 courses)
         const detailedCourses = await Promise.all(
           courses
             .slice(0, 5)
@@ -105,6 +169,7 @@ const DashboardHome = () => {
         setStats(statsData);
         setActivity(recentActivityData);
         setCourseData(courses);
+        setVoucherData(vouchers); // Lưu dữ liệu vouchers
       } catch (err) {
         setError("Failed to load dashboard data: " + err.message);
         console.error(err);
@@ -116,65 +181,69 @@ const DashboardHome = () => {
     fetchDashboardData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-      </div>
-    );
-  }
-
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 text-red-500">{error}</div>
+      <motion.div
+        className="container mx-auto px-4 py-8 text-red-500"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {error}
+      </motion.div>
     );
   }
 
   return (
-    <main className="container mx-auto px-4 py-8 space-y-8 max-w-7xl">
-      <PageTitle
-        title="Course Management Dashboard"
-        subtitle="Monitor and analyze your course ecosystem"
-      />
-
-      {stats && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <StatCards userStats={stats} />
-        </motion.div>
-      )}
-
-      {courseData.length > 0 && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <LearningCharts courses={courseData} />
-        </motion.div>
-      )}
-
-      {activity.length > 0 && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-        >
-          <ActivityTable recentActivity={activity} />
-        </motion.div>
-      )}
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.5 }}
-      >
-        <QuickActionCards />
+    <motion.main
+      className="container mx-auto px-4 py-8 space-y-8 max-w-7xl"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={childVariants}>
+        <PageTitle
+          title="Course Management Dashboard"
+          subtitle="Monitor and analyze your course ecosystem"
+        />
       </motion.div>
-    </main>
+
+      <motion.div variants={childVariants}>
+        {loading ? (
+          <StatCardsSkeleton />
+        ) : (
+          <StatCards courses={courseData} vouchers={voucherData} />
+        )}
+      </motion.div>
+
+      <motion.div variants={childVariants}>
+        {loading ? (
+          <LearningChartsSkeleton />
+        ) : courseData.length > 0 ? (
+          <LearningCharts courses={courseData} />
+        ) : (
+          <div className="p-6 bg-white rounded-lg shadow text-center text-gray-500">
+            No course data available.
+          </div>
+        )}
+      </motion.div>
+
+      <motion.div variants={childVariants}>
+        {loading ? (
+          <ActivityTableSkeleton />
+        ) : activity.length > 0 ? (
+          <ActivityTable recentActivity={activity} />
+        ) : (
+          <div className="p-6 bg-white rounded-lg shadow text-center text-gray-500">
+            No recent activity available.
+          </div>
+        )}
+      </motion.div>
+
+      <motion.div variants={childVariants}>
+        {loading ? <QuickActionCardsSkeleton /> : <QuickActionCards />}
+      </motion.div>
+    </motion.main>
   );
 };
 
