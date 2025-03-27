@@ -18,7 +18,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response.data.result || response.data,
   (error) => {
-    console.log("Response error:", error.response?.data || error); // Log để kiểm tra lỗi
+    console.log("Response error:", error.response?.data || error);
     return Promise.reject(error.response?.data || error);
   }
 );
@@ -49,9 +49,9 @@ export const voucherApi = {
   getAll: () => axiosInstance.get("/Voucher"),
   getById: (id) => axiosInstance.get(`/Voucher/id/${id}`),
   create: (voucherData) => axiosInstance.post("/Voucher", voucherData),
-  update: (id, voucherData) =>
-    axiosInstance.put(`/Voucher/id/${id}`, voucherData),
-  delete: (id) => axiosInstance.delete(`/Voucher/id/${id}`),
+  update: (id, voucherData) => axiosInstance.put(`/Voucher/${id}`, voucherData), // Sửa endpoint
+  delete: (id) => axiosInstance.delete(`/Voucher/${id}`),
+  checkAndDisable: () => axiosInstance.post("/Voucher/check-and-disable"),
 };
 
 export const transactionApi = {
