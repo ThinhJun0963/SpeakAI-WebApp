@@ -11,7 +11,13 @@ const calculateFactors = (number) => {
   return factors;
 };
 
-export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
+export const TopicsForm = ({
+  courseData,
+  setCourseData,
+  onNext,
+  onPrev,
+  onCancel,
+}) => {
   const availableTopicNumbers = calculateFactors(courseData.maxPoint);
   const [numberOfTopics, setNumberOfTopics] = useState(
     availableTopicNumbers[0]
@@ -30,9 +36,9 @@ export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
     const newTopics = Array(newTopicCount)
       .fill(null)
       .map((_, index) => ({
-        topicName: `Topic ${index + 1}`,
+        topicName: courseData.topics[index]?.topicName || `Topic ${index + 1}`,
         maxPoint: topicMaxPoint,
-        exercises: [],
+        exercises: courseData.topics[index]?.exercises || [],
       }));
     setCourseData((prev) => ({ ...prev, topics: newTopics }));
   };
@@ -71,13 +77,10 @@ export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
           />
         ))}
       </div>
-      <div className="flex justify-between">
+      <div className="flex justify-end space-x-2">
+        <Button onClick={onCancel}>Cancel</Button>
         <Button onClick={onPrev}>Back</Button>
-        <Button
-          type="primary"
-          onClick={onNext}
-          disabled={courseData.topics.some((t) => !t.topicName)}
-        >
+        <Button type="primary" onClick={onNext}>
           Next
         </Button>
       </div>

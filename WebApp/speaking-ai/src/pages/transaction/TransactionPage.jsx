@@ -131,9 +131,8 @@ const TransactionPage = () => {
     (sum, transaction) => sum + (transaction.amount || 0),
     0
   );
-
   const statusDistribution = transactions.reduce((acc, transaction) => {
-    const status = transaction.status;
+    const status = transaction.status || "Unknown";
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {});
@@ -192,7 +191,7 @@ const TransactionPage = () => {
             ? "yellow"
             : status === "Failed"
             ? "red"
-            : "gray"; // Màu mặc định cho "Unknown"
+            : "gray";
         return <Tag color={color}>{status || "Unknown"}</Tag>;
       },
     },
