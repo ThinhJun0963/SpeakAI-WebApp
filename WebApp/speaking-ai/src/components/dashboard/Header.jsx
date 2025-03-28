@@ -1,8 +1,8 @@
+// Header.jsx
 import React from "react";
 import { ChevronDown, User, LogOut } from "lucide-react";
-import { Dropdown, Menu, Input, Avatar, Modal } from "antd";
+import { Dropdown, Menu, Avatar, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../../api/axiosInstance";
 
 const Header = ({ className }) => {
   const navigate = useNavigate();
@@ -13,21 +13,11 @@ const Header = ({ className }) => {
       content: "Are you sure you want to log out?",
       okText: "Yes",
       cancelText: "No",
-      onOk: async () => {
-        try {
-          // Call the logout API
-          await authApi.logout();
-          // Clear the token from localStorage
-          localStorage.removeItem("token");
-          // Redirect to login page
-          navigate("/login");
-        } catch (error) {
-          console.error("Logout failed:", error);
-          Modal.error({
-            title: "Error",
-            content: "Failed to logout. Please try again.",
-          });
-        }
+      onOk: () => {
+        // Xóa hết localStorage
+        localStorage.clear();
+        // Chuyển hướng về trang login
+        navigate("/login");
       },
     });
   };
@@ -40,7 +30,7 @@ const Header = ({ className }) => {
       <Menu.Item
         key="logout"
         icon={<LogOut className="h-4 w-4" />}
-        onClick={handleLogout} // Update to call handleLogout
+        onClick={handleLogout}
       >
         Logout
       </Menu.Item>
@@ -53,8 +43,6 @@ const Header = ({ className }) => {
     >
       <div className="flex justify-between items-center max-w-7xl mx-auto">
         <div className="flex items-center space-x-4"></div>
-
-        {/* Profile */}
         <div className="flex items-center space-x-4">
           <Dropdown
             overlay={profileMenu}

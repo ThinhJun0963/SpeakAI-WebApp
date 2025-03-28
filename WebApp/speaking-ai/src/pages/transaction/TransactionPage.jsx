@@ -115,6 +115,7 @@ const TransactionPage = () => {
         pageSize
       );
       const data = response.result || {};
+      console.log("Transaction data:", data);
       const transactionList = data.items || [];
 
       const validTransactions = transactionList.filter(
@@ -242,8 +243,7 @@ const TransactionPage = () => {
       dataIndex: "amount",
       key: "amount",
       sorter: true,
-      render: (amount) =>
-        amount !== undefined ? `${(amount / 1000).toFixed(1)}` : "N/A",
+      render: (amount) => (amount !== undefined ? `${amount}` : "N/A"),
     },
     {
       title: "Payment Method",
@@ -297,7 +297,7 @@ const TransactionPage = () => {
               <Card>
                 <Statistic
                   title="Total Revenue (VND)"
-                  value={totalRevenue / 1000}
+                  value={totalRevenue}
                   precision={1}
                   prefix="₫"
                   valueStyle={{ color: "#3f8600" }}
@@ -383,7 +383,7 @@ const TransactionPage = () => {
                     xField="date"
                     yField="amount"
                     yAxis={{
-                      label: { formatter: (v) => `${(v / 1000).toFixed(1)}` },
+                      label: { formatter: (v) => `${v}` },
                     }}
                     point={{
                       size: 5,
@@ -394,7 +394,7 @@ const TransactionPage = () => {
                     tooltip={{
                       formatter: (datum) => ({
                         name: "Revenue",
-                        value: `${(datum.amount / 1000).toFixed(1)} VND`,
+                        value: `${datum.amount} VND`,
                       }),
                     }}
                     smooth
@@ -413,7 +413,7 @@ const TransactionPage = () => {
       {/* Transaction Table */}
       <motion.div variants={childVariants}>
         {loading ? (
-          <TransactionTableSkeleton />
+          <TransactionTableSkeleton />  
         ) : (
           <>
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4">

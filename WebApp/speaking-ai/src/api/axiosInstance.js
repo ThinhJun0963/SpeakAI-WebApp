@@ -1,3 +1,4 @@
+// axiosInstance.js
 import axios from "axios";
 
 const axiosInstance = axios.create({
@@ -7,7 +8,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
     console.log("Request config:", config);
     return config;
@@ -66,10 +67,6 @@ export const transactionApi = {
 
 export const userApi = {
   getUserById: (userId) => axiosInstance.get(`/users/${userId}`),
-};
-
-export const authApi = {
-  logout: () => axiosInstance.post("/auth/logout"),
 };
 
 export default axiosInstance;

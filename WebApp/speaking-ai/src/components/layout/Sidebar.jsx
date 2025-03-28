@@ -1,20 +1,10 @@
+// Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Home,
-  Calendar,
-  Users,
-  CreditCard,
-  BarChart2,
-  LogOut,
-  Menu,
-  Tag,
-} from "lucide-react";
+import { Home, Users, CreditCard, LogOut, Menu, Tag } from "lucide-react";
 import { Modal, Tooltip, Skeleton } from "antd";
-import { authApi } from "../../api/axiosInstance"; // Import authApi
 
-// Skeleton cho Sidebar
 const SidebarSkeleton = () => (
   <div className="h-screen fixed left-0 top-0 w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-xl z-40">
     <div className="p-4">
@@ -61,79 +51,35 @@ const Sidebar = ({
       content: "Are you sure you want to log out?",
       okText: "Yes",
       cancelText: "No",
-      onOk: async () => {
-        try {
-          // Call the logout API
-          await authApi.logout();
-          // Clear the token from localStorage
-          localStorage.removeItem("token");
-          // Redirect to login page
-          navigate("/login");
-        } catch (error) {
-          console.error("Logout failed:", error);
-          Modal.error({
-            title: "Error",
-            content: "Failed to logout. Please try again.",
-          });
-        }
+      onOk: () => {
+        // Xóa hết localStorage
+        localStorage.clear();
+        // Chuyển hướng về trang login
+        navigate("/login");
       },
     });
   };
 
   const sidebarVariants = {
-    expanded: {
-      width: 256,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
-        duration: 0.4,
-      },
-    },
-    collapsed: {
-      width: 64,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
-        duration: 0.4,
-      },
-    },
+    expanded: { width: 256 },
+    collapsed: { width: 64 },
   };
 
   const textVariants = {
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.3, ease: "easeInOut" },
-    },
-    hidden: {
-      opacity: 0,
-      x: -20,
-      transition: { duration: 0.3, ease: "easeInOut" },
-    },
+    visible: { opacity: 1, x: 0 },
+    hidden: { opacity: 0, x: -20 },
   };
 
   const iconVariants = {
-    expanded: {
-      rotate: 0,
-      scale: 1,
-      transition: { duration: 0.3, ease: "easeInOut" },
-    },
-    collapsed: {
-      rotate: 360,
-      scale: 1.1,
-      transition: { duration: 0.3, ease: "easeInOut" },
-    },
+    expanded: { rotate: 0, scale: 1 },
+    collapsed: { rotate: 360, scale: 1.1 },
   };
 
-  if (loading) {
-    return <SidebarSkeleton />;
-  }
+  if (loading) return <SidebarSkeleton />;
 
   return (
     <motion.div
-      className={`h-screen fixed left-0 top-0 shadow-xl z-50 bg-gradient-to-b from-gray-900 to-gray-800 text-white`}
+      className="h-screen fixed left-0 top-0 shadow-xl z-50 bg-gradient-to-b from-gray-900 to-gray-800 text-white"
       variants={sidebarVariants}
       initial="expanded"
       animate={isCollapsed ? "collapsed" : "expanded"}
@@ -245,7 +191,7 @@ const Sidebar = ({
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleLogout} // Call handleLogout on click
+            onClick={handleLogout}
           >
             <motion.div
               variants={iconVariants}
