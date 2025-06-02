@@ -1,106 +1,76 @@
-// src/components/course/CourseForm.jsx
-import React from "react";
-import { Button, Input, Select, Checkbox } from "antd";
+import { Form, Input, Select, Checkbox, Button } from "antd";
+import {
+  MAX_POINT_OPTIONS,
+  LEVEL_OPTIONS,
+} from "../../constants/courseOptions";
 
 const { Option } = Select;
 
-const POINT_OPTIONS = [
-  { value: 90, label: "90 points" },
-  { value: 100, label: "100 points" },
-  { value: 200, label: "200 points" },
-];
-
-const LEVEL_OPTIONS = [
-  { value: 1, label: "Beginner" },
-  { value: 2, label: "Intermediate" },
-  { value: 3, label: "Advanced" },
-];
-
 export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
-  const handleFieldChange = (field, value) => {
-    setCourseData((prev) => ({ ...prev, [field]: value }));
+  const [form] = Form.useForm();
+
+  const handleValuesChange = (changedValues, allValues) => {
+    setCourseData((prev) => ({ ...prev, ...allValues }));
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Course Name
-        </label>
-        <Input
-          value={courseData.courseName}
-          onChange={(e) => handleFieldChange("courseName", e.target.value)}
-          placeholder="Enter course name"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description
-        </label>
-        <Input
-          value={courseData.description}
-          onChange={(e) => handleFieldChange("description", e.target.value)}
-          placeholder="Enter course description"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Maximum Points
-        </label>
-        <Select
-          value={courseData.maxPoint}
-          onChange={(value) => handleFieldChange("maxPoint", value)}
-          placeholder="Select maximum points"
-          style={{ width: "100%" }}
-        >
-          {POINT_OPTIONS.map((option) => (
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={courseData}
+      onValuesChange={handleValuesChange}
+      onFinish={onNext}
+      className="space-y-4"
+    >
+      <Form.Item
+        name="courseName"
+        label="Course Name"
+        rules={[{ required: true, message: "Please enter course name" }]}
+      >
+        <Input placeholder="Enter course name" />
+      </Form.Item>
+      <Form.Item
+        name="description"
+        label="Description"
+        rules={[{ required: true, message: "Please enter description" }]}
+      >
+        <Input.TextArea rows={4} placeholder="Enter course description" />
+      </Form.Item>
+      <Form.Item
+        name="maxPoint"
+        label="Max Point"
+        rules={[{ required: true, message: "Please select max point" }]}
+      >
+        <Select placeholder="Select max point">
+          {MAX_POINT_OPTIONS.map((option) => (
             <Option key={option.value} value={option.value}>
               {option.label}
             </Option>
           ))}
         </Select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Level
-        </label>
-        <Select
-          value={courseData.levelId}
-          onChange={(value) => handleFieldChange("levelId", value)}
-          placeholder="Select course level"
-          style={{ width: "100%" }}
-        >
+      </Form.Item>
+      <Form.Item
+        name="levelId"
+        label="Level"
+        rules={[{ required: true, message: "Please select level" }]}
+      >
+        <Select placeholder="Select course level">
           {LEVEL_OPTIONS.map((option) => (
             <Option key={option.value} value={option.value}>
               {option.label}
             </Option>
           ))}
         </Select>
-      </div>
-      <div className="flex space-x-4">
-        <Checkbox
-          checked={courseData.isFree}
-          onChange={(e) => handleFieldChange("isFree", e.target.checked)}
-        >
-          Free
-        </Checkbox>
-        <Checkbox
-          checked={courseData.isPremium}
-          onChange={(e) => handleFieldChange("isPremium", e.target.checked)}
-        >
-          Premium
-        </Checkbox>
-      </div>
-      <div className="flex justify-between pt-6">
+      </Form.Item>
+      <Form.Item name="isPremium" valuePropName="checked">
+        <Checkbox>Premium</Checkbox>
+      </Form.Item>
+      <div className="flex justify-end space-x-2">
         <Button onClick={onCancel}>Cancel</Button>
-        <Button
-          type="primary"
-          onClick={onNext}
-          disabled={!courseData.courseName || !courseData.description}
-        >
+        <Button type="primary" htmlType="submit">
           Next
         </Button>
       </div>
-    </div>
+    </Form>
   );
 };

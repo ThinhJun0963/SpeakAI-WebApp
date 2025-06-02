@@ -1,66 +1,156 @@
-import { useState } from "react";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
-import { auth } from "../../firebase";
-import { useNavigate } from "react-router-dom"; // Nếu bạn sử dụng react-router
+import { useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
+import { authApi } from "../../api/authApi";
 
 export const useAuth = () => {
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const auth = getAuth();
-  const navigate = useNavigate(); // Nếu bạn sử dụng react-router
 
-  const login = async ({ email, password }) => {
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("accessToken");
+    if (storedUser && storedToken) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+    }
+  }, []);
+
+  const login = async ({ username, password }) => {
     setLoading(true);
     setError(null);
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
+      const response = await authApi.login(username, password);
+      const data = response.data; // Lấy dữ liệu từ response
+      if (!data.isSuccess) {
+        throw new Error(data.message || "Login failed");
+      }
+      const { accessToken, refreshToken } = data.result;
+      const decodedUser = jwtDecode(accessToken);
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("user", JSON.stringify(decodedUser));
+      setUser(decodedUser);
+      return decodedUser.role;
+    } catch (err) {
+      setError(err.message || "Login failed");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async (credential) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authApi.loginWithGoogle(credential);
+      const data = response.data;
+      if (!data.isSuccess) {
+        throw new Error(data.message || "Google login failed");
+      }
+      const { accessToken, refreshToken } = data.result;
+      const decodedUser = jwtDecode(accessToken);
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("user", JSON.stringify(decodedUser));
+      setUser(decodedUser);
+      return decodedUser.role;
+    } catch (err) {
+      console.error("Google login error:", err.message || err);
+      setError(err.message || "Google login failed");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (formData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authApi.register(formData);
+      const data = response.data;
+      if (!data.isSuccess) {
+        throw new Error(data.message || "Registration failed");
+      }
+      return { success: true };
+    } catch (err) {
+      setError(err.message || "Registration failed");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOtp = async ({ userId, otpCode }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authApi.verifyOtp(userId, otpCode);
+      const data = response.data;
+      if (!data.isSuccess) {
+        throw new Error(data.message || "OTP verification failed");
+      }
+      return data.message;
+    } catch (err) {
+      setError(err.message || "OTP verification failed");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const forgotPassword = async (email) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authApi.forgotPassword(email);
+      const data = response.data;
+      if (!data.isSuccess) {
+        throw new Error(data.message || "Failed to send reset email");
+      }
+      return data.message;
+    } catch (err) {
+      setError(err.message || "Failed to send reset email");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async ({ otp, password, confirmPassword, email }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authApi.resetPassword({
+        otp,
+        password,
+        confirmPassword,
         email,
-        password
-      );
-      const user = userCredential.user;
-      setLoading(false);
-      // Có thể chuyển hướng người dùng sau khi đăng nhập thành công
-      navigate("/dashboard");
-      return user;
+      });
+      const data = response.data;
+      if (!data.isSuccess) {
+        throw new Error(data.message || "Failed to reset password");
+      }
+      return data.message;
     } catch (err) {
-      setLoading(false);
-      const errorMessage =
-        err.code === "auth/invalid-credential"
-          ? "Email hoặc mật khẩu không đúng"
-          : err.code === "auth/too-many-requests"
-          ? "Quá nhiều lần thử. Vui lòng thử lại sau"
-          : "Đã xảy ra lỗi khi đăng nhập";
-      setError(errorMessage);
+      setError(err.message || "Failed to reset password");
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loginWithGoogle = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      setLoading(false);
-      navigate("/dashboard");
-      return user;
-    } catch (err) {
-      setLoading(false);
-      const errorMessage =
-        err.code === "auth/popup-closed-by-user"
-          ? "Đăng nhập đã bị hủy"
-          : "Đã xảy ra lỗi khi đăng nhập bằng Google";
-      setError(errorMessage);
-      throw err;
-    }
+  return {
+    user,
+    loading,
+    error,
+    login,
+    loginWithGoogle,
+    register,
+    verifyOtp,
+    forgotPassword,
+    resetPassword,
   };
-
-  return { login, loginWithGoogle, loading, error };
 };

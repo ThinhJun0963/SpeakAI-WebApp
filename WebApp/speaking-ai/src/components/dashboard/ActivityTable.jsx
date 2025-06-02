@@ -2,14 +2,12 @@ import React from "react";
 import { Card, CardContent } from "../ui/Card";
 
 const ActivityTable = ({ recentActivity }) => {
-  const getProficiencyColor = (level) => {
-    switch (level) {
-      case "Beginner":
-        return "bg-blue-50 text-blue-700 ring-1 ring-blue-600/20";
-      case "Intermediate":
-        return "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20";
-      case "Advanced":
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Active":
         return "bg-green-50 text-green-700 ring-1 ring-green-600/20";
+      case "Inactive":
+        return "bg-red-50 text-red-700 ring-1 ring-red-600/20";
       default:
         return "bg-gray-50 text-gray-700 ring-1 ring-gray-600/20";
     }
@@ -18,61 +16,47 @@ const ActivityTable = ({ recentActivity }) => {
   return (
     <section className="mt-12">
       <h2 className="text-xl font-semibold text-gray-700 mb-4">
-        Recent User Activity
+        Recent Course Activity
       </h2>
-      <Card className="overflow-hidden border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
+      <Card className="overflow-hidden border border-gray-200 shadow-sm">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="text-left bg-gray-50">
-                  <th className="px-6 py-4 text-sm font-medium text-gray-500 border-b border-gray-200">
-                    User
+                  <th className="px-6 py-4 text-sm font-medium text-gray-500">
+                    Course
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-gray-500 border-b border-gray-200">
+                  <th className="px-6 py-4 text-sm font-medium text-gray-500">
                     Action
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-gray-500 border-b border-gray-200">
-                    Scenario
+                  <th className="px-6 py-4 text-sm font-medium text-gray-500">
+                    Topic
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-gray-500 border-b border-gray-200">
-                    Time
-                  </th>
-                  <th className="px-6 py-4 text-sm font-medium text-gray-500 border-b border-gray-200">
-                    Proficiency
+                  <th className="px-6 py-4 text-sm font-medium text-gray-500">
+                    Status
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {recentActivity.map((activity) => (
-                  <tr
-                    key={activity.id}
-                    className="transition-colors duration-200 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-700 border-b border-gray-100">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
-                          {activity.user.charAt(0)}
-                        </div>
-                        <span className="ml-2">{activity.user}</span>
-                      </div>
+                  <tr key={activity.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {activity.courseName}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 border-b border-gray-100">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {activity.action}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 border-b border-gray-100">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {activity.scenario}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 border-b border-gray-100">
-                      {activity.time}
-                    </td>
-                    <td className="px-6 py-4 text-sm border-b border-gray-100">
+                    <td className="px-6 py-4 text-sm">
                       <span
-                        className={`px-3 py-1 text-xs font-medium rounded-full 
-                        transition-all duration-200 hover:shadow-sm
-                        ${getProficiencyColor(activity.proficiency)}`}
+                        className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                          activity.status
+                        )}`}
                       >
-                        {activity.proficiency}
+                        {activity.status}
                       </span>
                     </td>
                   </tr>

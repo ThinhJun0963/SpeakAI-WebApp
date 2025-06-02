@@ -1,22 +1,44 @@
-// src/components/course/TopicsForm.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Input, Select } from "antd";
-import { calculateFactors } from "../../utils/calculations";
 
 const { Option } = Select;
 
-export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
-  const [numberOfTopics, setNumberOfTopics] = useState(1);
+const calculateFactors = (number) => {
+  const factors = [];
+  for (let i = 1; i <= number; i++) {
+    if (number % i === 0) factors.push(i);
+  }
+  return factors;
+};
+
+export const TopicsForm = ({
+  courseData,
+  setCourseData,
+  onNext,
+  onPrev,
+  onCancel,
+}) => {
   const availableTopicNumbers = calculateFactors(courseData.maxPoint);
+  const [numberOfTopics, setNumberOfTopics] = useState(
+    availableTopicNumbers[0]
+  );
+
+  useEffect(() => {
+    if (courseData.topics.length === 0) {
+      handleTopicNumberChange(availableTopicNumbers[0]);
+    }
+  }, [courseData.topics]);
 
   const handleTopicNumberChange = (value) => {
     const newTopicCount = value;
     setNumberOfTopics(newTopicCount);
+    const topicMaxPoint = courseData.maxPoint / newTopicCount;
     const newTopics = Array(newTopicCount)
       .fill(null)
       .map((_, index) => ({
-        topicName: `Topic ${index + 1}`,
-        exercises: [],
+        topicName: courseData.topics[index]?.topicName || `Topic ${index + 1}`,
+        maxPoint: topicMaxPoint,
+        exercises: courseData.topics[index]?.exercises || [],
       }));
     setCourseData((prev) => ({ ...prev, topics: newTopics }));
   };
@@ -36,11 +58,11 @@ export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
         <Select
           value={numberOfTopics}
           onChange={handleTopicNumberChange}
-          style={{ width: "100%" }}
+          className="w-full"
         >
           {availableTopicNumbers.map((num) => (
             <Option key={num} value={num}>
-              {num} Topics
+              {num} Topics (Each: {courseData.maxPoint / num} points)
             </Option>
           ))}
         </Select>
@@ -55,13 +77,10 @@ export const TopicsForm = ({ courseData, setCourseData, onNext, onPrev }) => {
           />
         ))}
       </div>
-      <div className="flex justify-between">
-        <Button onClick={onPrev}>Previous</Button>
-        <Button
-          type="primary"
-          onClick={onNext}
-          disabled={courseData.topics.some((t) => !t.topicName)}
-        >
+      <div className="flex justify-end space-x-2">
+        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onPrev}>Back</Button>
+        <Button type="primary" onClick={onNext}>
           Next
         </Button>
       </div>

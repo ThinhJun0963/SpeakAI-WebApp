@@ -1,23 +1,16 @@
-// src/api/axiosInstance.js
+// axiosInstance.js
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    (window.location.hostname.includes("vercel.app")
-      ? "/api"
-      : "http://sai.runasp.net/api"),
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: import.meta.env.VITE_API_URL || "http://sai.runasp.net/api",
+  headers: { "Content-Type": "application/json" },
 });
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    const token = localStorage.getItem("accessToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    console.log("Request config:", config);
     return config;
   },
   (error) => Promise.reject(error)
@@ -26,56 +19,54 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response.data.result || response.data,
   (error) => {
-    const message = error.response?.data?.message || "Something went wrong";
-    return Promise.reject(new Error(message));
+    console.log("Response error:", error.response?.data || error);
+    return Promise.reject(error.response?.data || error);
   }
 );
 
-// Thêm các phương thức của courseService vào đây
 export const courseApi = {
-  getAll: async () => {
-    try {
-      const response = await axiosInstance.get("/courses");
-      console.log("Raw response from axiosInstance:", response);
-      return response;
-    } catch (error) {
-      console.error("Error in courseApi.getAll:", error);
-      throw error;
-    }
-  },
+  getAll: () => axiosInstance.get("/courses"),
+  getDetails: (id) => axiosInstance.get(`/courses/${id}/details`),
+  create: (courseData) => axiosInstance.post("/courses", courseData),
+  update: (id, courseData) => axiosInstance.put(`/courses/${id}`, courseData),
+  delete: (id) => axiosInstance.delete(`/courses/${id}`),
+  addTopic: (courseId, topicData) =>
+    axiosInstance.post(`/courses/${courseId}/topic`, topicData),
+  getTopic: (topicId) => axiosInstance.get(`/courses/topic/${topicId}`),
+  updateTopic: (topicId, topicData) =>
+    axiosInstance.put(`/courses/topic/${topicId}`, topicData),
+  deleteTopic: (topicId) => axiosInstance.delete(`/courses/topic/${topicId}`),
+  addExercise: (topicId, exerciseData) =>
+    axiosInstance.post(`/courses/topics/${topicId}/exercises`, exerciseData),
+  getExercise: (exerciseId) =>
+    axiosInstance.get(`/courses/exercise/${exerciseId}`),
+  updateExercise: (exerciseId, exerciseData) =>
+    axiosInstance.put(`/courses/exercise/${exerciseId}`, exerciseData),
+  deleteExercise: (exerciseId) =>
+    axiosInstance.delete(`/courses/exercise/${exerciseId}`),
+};
 
-  create: async (courseData) => {
-    try {
-      const response = await axiosInstance.post("/courses", courseData);
-      console.log("Create course response:", response);
-      return response;
-    } catch (error) {
-      console.error("Error in courseApi.create:", error);
-      throw error;
-    }
-  },
+export const voucherApi = {
+  getAll: () => axiosInstance.get("/Voucher"),
+  getById: (id) => axiosInstance.get(`/Voucher/id/${id}`),
+  create: (voucherData) => axiosInstance.post("/Voucher", voucherData),
+  update: (id, voucherData) => axiosInstance.put(`/Voucher/${id}`, voucherData),
+  delete: (id) => axiosInstance.delete(`/Voucher/${id}`),
+  checkAndDisable: () => axiosInstance.post("/Voucher/check-and-disable"),
+};
 
-  delete: async (id) => {
-    try {
-      const response = await axiosInstance.delete(`/courses/${id}`);
-      console.log("Delete course response:", response);
-      return response;
-    } catch (error) {
-      console.error("Error in courseApi.delete:", error);
-      throw error;
+export const transactionApi = {
+  getList: (status, pageNumber, pageSize) => {
+    const params = { PageNumber: pageNumber, PageSize: pageSize };
+    if (status && status !== "All") {
+      params.Status = status;
     }
+    return axiosInstance.get("/transactions", { params });
   },
+};
 
-  update: async (id, courseData) => {
-    try {
-      const response = await axiosInstance.put(`/courses/${id}`, courseData);
-      console.log("Update course response:", response);
-      return response;
-    } catch (error) {
-      console.error("Error in courseApi.update:", error);
-      throw error;
-    }
-  },
+export const userApi = {
+  getUserById: (userId) => axiosInstance.get(`/users/${userId}`),
 };
 
 export default axiosInstance;

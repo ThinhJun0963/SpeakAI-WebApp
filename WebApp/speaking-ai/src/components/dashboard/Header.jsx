@@ -1,35 +1,64 @@
+// Header.jsx
 import React from "react";
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { ChevronDown, User, LogOut } from "lucide-react";
+import { Dropdown, Menu, Avatar, Modal } from "antd";
+import { useNavigate } from "react-router-dom";
 
-const Header = () => {
+const Header = ({ className }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    Modal.confirm({
+      title: "Confirm logout",
+      content: "Are you sure you want to log out?",
+      okText: "Yes",
+      cancelText: "No",
+      onOk: () => {
+        // Xóa hết localStorage
+        localStorage.clear();
+        // Chuyển hướng về trang login
+        navigate("/login");
+      },
+    });
+  };
+
+  const profileMenu = (
+    <Menu className="w-48">
+      <Menu.Item key="profile" icon={<User className="h-4 w-4" />}>
+        Profile
+      </Menu.Item>
+      <Menu.Item
+        key="logout"
+        icon={<LogOut className="h-4 w-4" />}
+        onClick={handleLogout}
+      >
+        Logout
+      </Menu.Item>
+    </Menu>
+  );
+
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-30">
-      <div className="flex items-center justify-between h-16 px-6">
-        <div className="flex items-center flex-1">
-          <div className="relative w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Search users, content, or reports..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-          </div>
-        </div>
-
+    <header
+      className={`bg-white shadow-sm p-4 border-b border-gray-100 ${className}`}
+    >
+      <div className="flex justify-between items-center max-w-7xl mx-auto">
+        <div className="flex items-center space-x-4"></div>
         <div className="flex items-center space-x-4">
-          <button className="relative p-1 text-gray-400 hover:text-blue-500 focus:outline-none">
-            <Bell size={20} />
-            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-          </button>
-
-          <div className="hidden md:flex items-center">
-            <span className="text-sm font-medium text-gray-700 mr-2">
-              Welcome, QThinh
-            </span>
-            <button className="flex items-center text-gray-600 hover:text-blue-600">
-              <ChevronDown size={16} />
-            </button>
-          </div>
+          <Dropdown
+            overlay={profileMenu}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <div className="flex items-center space-x-2 cursor-pointer hover:scale-105 transition-transform duration-300">
+              <Avatar
+                src="https://i.pravatar.cc/150?img=3"
+                size={32}
+                className="hover:scale-110 transition-transform duration-300"
+              />
+              <span className="font-medium text-gray-700">Admin</span>
+              <ChevronDown className="h-4 w-4 text-gray-600" />
+            </div>
+          </Dropdown>
         </div>
       </div>
     </header>

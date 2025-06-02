@@ -64,3 +64,12 @@ button:focus-visible {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 16px; /* Thu gọn trên màn hình nhỏ */
+  }
+  .main-content {
+    margin-left: 16px !important; /* Điều chỉnh nội dung */
+  }
+}
