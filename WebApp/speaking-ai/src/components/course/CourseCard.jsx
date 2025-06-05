@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Card, Tag, Typography } from "antd";
-import { courseApi } from "../../../api/axiosInstance";
-import CourseEditForm from "../CourseEditForm";
+import { courseApi } from "../../api/axiosInstance";
+import CourseEditForm from "./CourseEditForm";
 
 const { Text } = Typography;
 

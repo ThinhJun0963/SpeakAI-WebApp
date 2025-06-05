@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
-import InputField from "../components/login/InputField";
-import LoadingButton from "../components/login/LoadingButton";
-import ErrorMessage from "../components/login/ErrorMessage";
+import InputField from "../components/common/InputField";
+import LoadingButton from "../components/common/LoadingButton";
+import ErrorMessage from "../components/common/ErrorMessage";
 import { useAuth } from "../components/hooks/useAuth";
 import useModal from "../components/hooks/useModal";
 

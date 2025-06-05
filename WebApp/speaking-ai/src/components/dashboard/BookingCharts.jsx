@@ -14,7 +14,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../../ui/Card";
 
 const COLORS = [
   "#3B82F6",
