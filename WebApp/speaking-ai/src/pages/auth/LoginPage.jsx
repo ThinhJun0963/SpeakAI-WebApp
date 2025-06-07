@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
-import InputField from "../components/common/InputField";
-import LoadingButton from "../components/common/LoadingButton";
-import ErrorMessage from "../components/common/ErrorMessage";
-import { useAuth } from "../components/hooks/useAuth";
-import useModal from "../components/hooks/useModal";
+import LoginForm from "../../components/auth/LoginForm";
+import ErrorMessage from "../../components/common/ErrorMessage";
+import LoadingButton from "../../components/common/LoadingButton";
+import InputField from "../../components/common/InputField"; // Updated import
+import { useAuth } from "../../hooks/useAuth";
+import useModal from "../../hooks/useModal";
 
 const LoginPage = () => {
   const { login, loginWithGoogle, error } = useAuth();
@@ -76,85 +77,50 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-4 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <motion.div className="text-center mb-8">
+        <div className="bg-white/90 rounded-2xl shadow-2xl p-8 backdrop-blur-sm border border-white/20">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="text-center mb-8"
+          >
             <h1 className="text-3xl font-bold text-gray-900">Welcome Back!</h1>
             <p className="mt-2 text-sm text-gray-500">
               Log in to continue your journey
             </p>
           </motion.div>
 
-          {error && <ErrorMessage message={error} />}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4"
+              >
+                <ErrorMessage message={error} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-3 mt-6">
-            <InputField
-              id="username"
-              name="username"
-              type="text"
-              icon={User}
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Username"
-              required
-            />
-            <div>
-              <InputField
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                icon={Lock}
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Password"
-                required
-                endIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-500 hover:text-gray-700 transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                }
-              />
-              <p className="mt-2 text-right text-sm text-gray-600">
-                <a
-                  href="/forgot-password"
-                  className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  Forgot your password?
-                </a>
-              </p>
-            </div>
-            <LoadingButton
-              loading={loadingNormal}
-              text="Log In"
-              loadingText="Logging in..."
-            />
-          </form>
-
-          <div className="mt-4 space-y-4">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              size="large"
-              theme="outline"
-              text="signin_with"
-              shape="pill"
-              disabled={loadingGoogle}
-            />
-          </div>
+          <LoginForm
+            formData={formData}
+            loading={loadingNormal}
+            error={error}
+            showPassword={showPassword}
+            onSubmit={handleSubmit}
+            onChange={handleChange}
+            onTogglePassword={() => setShowPassword(!showPassword)}
+            onGoogleLogin={handleGoogleSuccess}
+            loadingGoogle={loadingGoogle}
+          />
 
           <p className="mt-6 text-center text-sm text-gray-600">
             Don’t have an account?{" "}

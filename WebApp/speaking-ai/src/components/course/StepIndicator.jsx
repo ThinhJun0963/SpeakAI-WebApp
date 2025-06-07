@@ -1,6 +1,7 @@
+import React from "react";
 import { BookOpen, ListTodo, Trophy } from "lucide-react";
 
-export const StepIndicator = ({ currentStep, onStepClick, validateStep }) => {
+const StepIndicator = ({ currentStep, onStepClick, validateStep }) => {
   const steps = [
     { number: 1, title: "Course Info", icon: BookOpen },
     { number: 2, title: "Topics", icon: ListTodo },
@@ -18,9 +19,7 @@ export const StepIndicator = ({ currentStep, onStepClick, validateStep }) => {
             return (
               <div
                 key={step.number}
-                className={`flexව
-
-                flex flex-col items-center ${
+                className={`flex flex-col items-center ${
                   isClickable ? "cursor-pointer" : "cursor-not-allowed"
                 }`}
                 onClick={() => isClickable && onStepClick(step.number)}
@@ -28,7 +27,7 @@ export const StepIndicator = ({ currentStep, onStepClick, validateStep }) => {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center relative z-10 transition-colors duration-200 ${
                     currentStep >= step.number ? "bg-blue-600" : "bg-gray-200"
-                  } hover:bg-blue-500`}
+                  }`}
                 >
                   <StepIcon
                     className={`w-5 h-5 ${
@@ -55,3 +54,5 @@ export const StepIndicator = ({ currentStep, onStepClick, validateStep }) => {
     </div>
   );
 };
+
+export default StepIndicator;

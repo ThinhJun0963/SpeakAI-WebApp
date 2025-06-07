@@ -1,3 +1,4 @@
+import React from "react";
 import { Form, Input, Select, Checkbox, Button } from "antd";
 import {
   MAX_POINT_OPTIONS,
@@ -6,19 +7,15 @@ import {
 
 const { Option } = Select;
 
-export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
+const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
   const [form] = Form.useForm();
-
-  const handleValuesChange = (changedValues, allValues) => {
-    setCourseData((prev) => ({ ...prev, ...allValues }));
-  };
 
   return (
     <Form
       form={form}
       layout="vertical"
       initialValues={courseData}
-      onValuesChange={handleValuesChange}
+      onValuesChange={(_, allValues) => setCourseData(allValues)}
       onFinish={onNext}
       className="space-y-4"
     >
@@ -42,9 +39,9 @@ export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
         rules={[{ required: true, message: "Please select max point" }]}
       >
         <Select placeholder="Select max point">
-          {MAX_POINT_OPTIONS.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
+          {MAX_POINT_OPTIONS.map((o) => (
+            <Option key={o.value} value={o.value}>
+              {o.label}
             </Option>
           ))}
         </Select>
@@ -55,9 +52,9 @@ export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
         rules={[{ required: true, message: "Please select level" }]}
       >
         <Select placeholder="Select course level">
-          {LEVEL_OPTIONS.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
+          {LEVEL_OPTIONS.map((o) => (
+            <Option key={o.value} value={o.value}>
+              {o.label}
             </Option>
           ))}
         </Select>
@@ -74,3 +71,5 @@ export const CourseForm = ({ courseData, setCourseData, onNext, onCancel }) => {
     </Form>
   );
 };
+
+export default CourseForm;

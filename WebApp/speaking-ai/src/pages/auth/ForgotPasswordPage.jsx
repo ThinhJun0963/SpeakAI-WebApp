@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock } from "lucide-react";
 import { Input, Modal } from "antd";
-import InputField from "../components/common/InputField";
-import LoadingButton from "../components/common/LoadingButton";
-import ErrorMessage from "../components/common/ErrorMessage";
-import { useAuth } from "../components/hooks/useAuth";
-import useModal from "../components/hooks/useModal";
-import { validatePassword } from "../utils/validation";
+import InputField from "../../components/common/InputField"; // Updated import
+import LoadingButton from "../../components/common/LoadingButton";
+import ErrorMessage from "../../components/common/ErrorMessage";
+import { useAuth } from "../../hooks/useAuth";
+import useModal from "../../hooks/useModal";
+import { validatePassword } from "../../utils/validation";
 
 const ForgotPasswordPage = () => {
   const { forgotPassword, resetPassword } = useAuth();
@@ -54,7 +54,6 @@ const ForgotPasswordPage = () => {
     setLoading(true);
     setError(null);
 
-    // Kiểm tra password
     const passwordError = validatePassword(newPassword);
     if (passwordError) {
       setError(passwordError);
@@ -97,14 +96,14 @@ const ForgotPasswordPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-4 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white/90 rounded-2xl shadow-2xl p-8 backdrop-blur-sm border border-white/20">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -119,7 +118,18 @@ const ForgotPasswordPage = () => {
             </p>
           </motion.div>
 
-          {error && <ErrorMessage message={error} />}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4"
+              >
+                <ErrorMessage message={error} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleEmailSubmit} className="space-y-6 mt-6">
             <InputField
@@ -132,7 +142,6 @@ const ForgotPasswordPage = () => {
               placeholder="Email"
               required
             />
-
             <LoadingButton
               loading={loading}
               text="Send Reset Link"
@@ -144,7 +153,7 @@ const ForgotPasswordPage = () => {
             Back to{" "}
             <a
               href="/login"
-              className="font-medium text-blue-600 hover:text-blue-700"
+              className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
             >
               Log in
             </a>
@@ -164,32 +173,41 @@ const ForgotPasswordPage = () => {
           style: { background: "#52c41a", borderColor: "#52c41a" },
           disabled: loading,
         }}
+        closeIcon={<span className="text-gray-500 hover:text-gray-700">×</span>}
+        className="rounded-xl"
+        transitionName="modal"
       >
-        <p>
-          An OTP has been sent to your email. Please enter it below along with
-          your new password:
-        </p>
-        <Input
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          placeholder="Enter OTP"
-          maxLength={6}
-          style={{ marginTop: 16 }}
-        />
-        <Input.Password
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="New Password"
-          style={{ marginTop: 16 }}
-          prefix={<Lock className="h-5 w-5 text-gray-400" />}
-        />
-        <Input.Password
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm New Password"
-          style={{ marginTop: 16 }}
-          prefix={<Lock className="h-5 w-5 text-gray-400" />}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <p className="mb-4 text-gray-700">
+            An OTP has been sent to your email. Please enter it below along with
+            your new password:
+          </p>
+          <Input
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="Enter OTP"
+            maxLength={6}
+            className="w-full mb-4"
+          />
+          <Input.Password
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="New Password"
+            className="w-full mb-4"
+            prefix={<Lock className="h-5 w-5 text-gray-400" />}
+          />
+          <Input.Password
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm New Password"
+            className="w-full mb-4"
+            prefix={<Lock className="h-5 w-5 text-gray-400" />}
+          />
+        </motion.div>
       </Modal>
     </div>
   );

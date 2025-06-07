@@ -1,11 +1,12 @@
-// Header.jsx
-import React from "react";
+import React, { useContext } from "react";
 import { ChevronDown, User, LogOut } from "lucide-react";
 import { Dropdown, Menu, Avatar, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
+import ApiContext from "../../context/ApiContext";
 
 const Header = ({ className }) => {
   const navigate = useNavigate();
+  const { authApi } = useContext(ApiContext);
 
   const handleLogout = () => {
     Modal.confirm({
@@ -13,10 +14,9 @@ const Header = ({ className }) => {
       content: "Are you sure you want to log out?",
       okText: "Yes",
       cancelText: "No",
-      onOk: () => {
-        // Xóa hết localStorage
+      onOk: async () => {
+        await authApi.logout();
         localStorage.clear();
-        // Chuyển hướng về trang login
         navigate("/login");
       },
     });

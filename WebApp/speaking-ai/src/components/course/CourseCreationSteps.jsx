@@ -1,14 +1,13 @@
-import React, { useState } from "react";
-import { CourseForm } from "./CourseForm";
-import { TopicsForm } from "./TopicForm";
-import { ExercisesForm } from "./ExerciseForm";
-import { StepIndicator } from "./StepIndicator";
-import { courseApi } from "../../api/axiosInstance";
+import React from "react";
 import { Card } from "antd";
+import { useCourseApi } from "./useCourseApi";
+import { CourseForm, TopicsForm, ExercisesForm } from "./";
+import StepIndicator from "./StepIndicator";
 
-export const CourseCreationSteps = ({ onComplete, onCancel }) => {
-  const [step, setStep] = useState(1);
-  const [courseData, setCourseData] = useState({
+const CourseCreationSteps = ({ onComplete, onCancel }) => {
+  const { createCourse } = useCourseApi();
+  const [step, setStep] = React.useState(1);
+  const [courseData, setCourseData] = React.useState({
     courseName: "",
     description: "",
     maxPoint: 100,
@@ -17,16 +16,13 @@ export const CourseCreationSteps = ({ onComplete, onCancel }) => {
     levelId: 1,
     topics: [],
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const handleNext = () => setStep((prev) => prev + 1);
-  const handlePrev = () => setStep((prev) => prev - 1);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      await courseApi.create(courseData);
+      await createCourse(courseData);
       onComplete();
     } catch (err) {
       setError(err.message || "Failed to create course");
@@ -35,40 +31,60 @@ export const CourseCreationSteps = ({ onComplete, onCancel }) => {
     }
   };
 
-  if (error) {
+  const steps = [
+    {
+      component: (
+        <CourseForm
+          courseData={courseData}
+          setCourseData={setCourseData}
+          onNext={() => setStep(2)}
+          onCancel={onCancel}
+        />
+      ),
+      validate: () => !!courseData.courseName,
+    },
+    {
+      component: (
+        <TopicsForm
+          courseData={courseData}
+          setCourseData={setCourseData}
+          onNext={() => setStep(3)}
+          onPrev={() => setStep(1)}
+          onCancel={onCancel}
+        />
+      ),
+      validate: () => courseData.topics.length > 0,
+    },
+    {
+      component: (
+        <ExercisesForm
+          courseData={courseData}
+          setCourseData={setCourseData}
+          onPrev={() => setStep(2)}
+          onSave={handleSave}
+          loading={loading}
+          onCancel={onCancel}
+        />
+      ),
+      validate: () => courseData.topics.every((t) => t.exercises.length > 0),
+    },
+  ];
+
+  if (error)
     return <div className="text-red-500 text-center py-10">{error}</div>;
-  }
 
   return (
     <Card>
       <div className="p-6">
-        <StepIndicator currentStep={step} />
-        {step === 1 && (
-          <CourseForm
-            courseData={courseData}
-            setCourseData={setCourseData}
-            onNext={handleNext}
-            onCancel={onCancel}
-          />
-        )}
-        {step === 2 && (
-          <TopicsForm
-            courseData={courseData}
-            setCourseData={setCourseData}
-            onNext={handleNext}
-            onPrev={handlePrev}
-          />
-        )}
-        {step === 3 && (
-          <ExercisesForm
-            courseData={courseData}
-            setCourseData={setCourseData}
-            onPrev={handlePrev}
-            onSave={handleSave}
-            loading={loading}
-          />
-        )}
+        <StepIndicator
+          currentStep={step}
+          onStepClick={setStep}
+          validateStep={(i) => steps.slice(0, i).every((s) => s.validate())}
+        />
+        {steps[step - 1].component}
       </div>
     </Card>
   );
 };
+
+export default CourseCreationSteps;

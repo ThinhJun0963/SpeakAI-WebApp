@@ -1,79 +1,69 @@
 import React, { useState, useEffect } from "react";
 import { Button, Input, Select } from "antd";
+import { calculateFactors } from "../../utils/helpers";
 
 const { Option } = Select;
 
-const calculateFactors = (number) => {
-  const factors = [];
-  for (let i = 1; i <= number; i++) {
-    if (number % i === 0) factors.push(i);
-  }
-  return factors;
-};
-
-export const TopicsForm = ({
+const TopicsForm = ({
   courseData,
   setCourseData,
   onNext,
   onPrev,
   onCancel,
 }) => {
-  const availableTopicNumbers = calculateFactors(courseData.maxPoint);
   const [numberOfTopics, setNumberOfTopics] = useState(
-    availableTopicNumbers[0]
+    calculateFactors(courseData.maxPoint)[0]
   );
 
   useEffect(() => {
-    if (courseData.topics.length === 0) {
-      handleTopicNumberChange(availableTopicNumbers[0]);
-    }
+    if (courseData.topics.length === 0)
+      handleTopicNumberChange(calculateFactors(courseData.maxPoint)[0]);
   }, [courseData.topics]);
 
   const handleTopicNumberChange = (value) => {
-    const newTopicCount = value;
-    setNumberOfTopics(newTopicCount);
-    const topicMaxPoint = courseData.maxPoint / newTopicCount;
-    const newTopics = Array(newTopicCount)
-      .fill(null)
-      .map((_, index) => ({
-        topicName: courseData.topics[index]?.topicName || `Topic ${index + 1}`,
-        maxPoint: topicMaxPoint,
-        exercises: courseData.topics[index]?.exercises || [],
-      }));
-    setCourseData((prev) => ({ ...prev, topics: newTopics }));
+    setNumberOfTopics(value);
+    const topicMaxPoint = courseData.maxPoint / value;
+    setCourseData({
+      ...courseData,
+      topics: Array(value)
+        .fill()
+        .map((_, i) => ({
+          topicName: courseData.topics[i]?.topicName || `Topic ${i + 1}`,
+          maxPoint: topicMaxPoint,
+          exercises: courseData.topics[i]?.exercises || [],
+        })),
+    });
   };
 
   const handleTopicNameChange = (index, newName) => {
-    const updatedTopics = [...courseData.topics];
-    updatedTopics[index] = { ...updatedTopics[index], topicName: newName };
-    setCourseData((prev) => ({ ...prev, topics: updatedTopics }));
+    setCourseData({
+      ...courseData,
+      topics: courseData.topics.map((t, i) =>
+        i === index ? { ...t, topicName: newName } : t
+      ),
+    });
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Number of Topics
-        </label>
-        <Select
-          value={numberOfTopics}
-          onChange={handleTopicNumberChange}
-          className="w-full"
-        >
-          {availableTopicNumbers.map((num) => (
-            <Option key={num} value={num}>
-              {num} Topics (Each: {courseData.maxPoint / num} points)
-            </Option>
-          ))}
-        </Select>
-      </div>
+      <Select
+        value={numberOfTopics}
+        onChange={handleTopicNumberChange}
+        className="w-full"
+      >
+        {calculateFactors(courseData.maxPoint).map((num) => (
+          <Option key={num} value={num}>
+            {num} Topics (Each: {courseData.maxPoint / num} points)
+          </Option>
+        ))}
+      </Select>
       <div className="space-y-4">
-        {courseData.topics.map((topic, index) => (
+        {courseData.topics.map((t, i) => (
           <Input
-            key={index}
-            value={topic.topicName}
-            onChange={(e) => handleTopicNameChange(index, e.target.value)}
-            placeholder={`Topic ${index + 1} Name`}
+            key={i}
+            value={t.topicName}
+            onChange={(e) => handleTopicNameChange(i, e.target.value)}
+            placeholder={`Topic ${i + 1} Name`}
           />
         ))}
       </div>
@@ -87,3 +77,5 @@ export const TopicsForm = ({
     </div>
   );
 };
+
+export default TopicsForm;

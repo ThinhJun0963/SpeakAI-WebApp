@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent } from "@mui/material";
-import { getStatusStyle } from "../../utils/statusUtils";
+import { getStatusStyle } from "../utils/statusUtils";
 
 const ActivityTable = ({ recentActivity }) => {
   return (
