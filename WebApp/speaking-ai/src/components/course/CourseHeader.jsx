@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "antd";
 import { Skeleton } from "antd";
+import { Edit } from "lucide-react"; // Assuming this was imported in the original
 
 const CourseHeader = ({ onBack, onEdit, loading }) => {
   if (loading) {
