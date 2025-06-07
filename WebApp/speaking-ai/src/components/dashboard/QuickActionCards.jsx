@@ -1,90 +1,113 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, BookOpen, Tag, BarChart2, PlusCircle } from "lucide-react";
+import { BookOpen, Tag, CheckCircle, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@mui/material";
+import { useDashboardData } from "./useDashboardData";
 
-const QuickActionCards = () => {
-  const actions = [
+const StatCards = () => {
+  const { courses, vouchers } = useDashboardData();
+  const stats = [
     {
-      icon: Users,
-      title: "Manage Courses",
-      description: "Create and edit course content",
-      path: "/courses",
-      color: "blue",
-    },
-    {
-      icon: Tag,
-      title: "Handle Vouchers",
-      description: "Add or modify discount vouchers",
-      path: "/vouchers",
-      color: "purple",
-    },
-    {
+      title: "Total Courses",
+      value: courses.length,
+      change: courses.length > 0 ? `+${Math.round(courses.length / 10)}` : "0",
+      borderColor: "border-blue-200",
+      bgColor: "bg-blue-500",
       icon: BookOpen,
-      title: "New Course",
-      description: "Start creating a new course",
-      path: "/courses/create",
-      color: "green",
     },
     {
-      icon: PlusCircle,
-      title: "New Voucher",
-      description: "Create a new promotional voucher",
-      path: "/vouchers/create",
-      color: "orange",
+      title: "Active Vouchers",
+      value: vouchers.filter((v) => v.isActive).length,
+      change: vouchers.some((v) => v.isActive) ? "+1" : "0",
+      borderColor: "border-purple-200",
+      bgColor: "bg-purple-500",
+      icon: Tag,
+    },
+    {
+      title: "Active Courses",
+      value: courses.filter((c) => c.isActive).length,
+      change: courses.some((c) => c.isActive)
+        ? `+${Math.round(courses.length / 20)}`
+        : "0",
+      borderColor: "border-green-200",
+      bgColor: "bg-green-500",
+      icon: CheckCircle,
+    },
+    {
+      title: "Total Discounts",
+      value: `${vouchers.reduce(
+        (sum, v) => sum + (v.discountPercentage || 0),
+        0
+      )}%`,
+      change:
+        vouchers.length > 0 ? `+${Math.round(vouchers.length * 5)}%` : "0%",
+      borderColor: "border-orange-200",
+      bgColor: "bg-orange-500",
+      icon: DollarSign,
     },
   ];
 
   const cardVariants = {
-    hover: {
-      y: -10,
-      boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-      transition: { duration: 0.3 },
-    },
-    initial: { y: 0, boxShadow: "0 4px 6px rgba(0,0,0,0.05)" },
+    hover: { scale: 1.05, transition: { duration: 0.3 } },
+    initial: { scale: 1 },
   };
-
-  const iconVariants = {
-    hover: { rotate: 360, scale: 1.2, transition: { duration: 0.5 } },
-    initial: { rotate: 0, scale: 1 },
+  const textVariants = {
+    hover: { color: "#2563eb", transition: { duration: 0.3 } },
+    initial: { color: "#111827" },
   };
 
   return (
-    <section className="mt-12 mb-8">
-      <h2 className="text-xl font-semibold text-gray-700 mb-6">
-        Quick Actions
-      </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {actions.map((action, index) => (
+    <section>
+      <h2 className="text-xl font-semibold text-gray-700 mb-6">Key Metrics</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
           <motion.div
             key={index}
             variants={cardVariants}
             initial="initial"
             whileHover="hover"
           >
-            <Card className="border border-gray-200 overflow-hidden">
-              <CardContent className="p-6">
+            <Card className={`border ${stat.borderColor} overflow-hidden`}>
+              <CardContent className="p-0">
+                <div className="flex items-center p-5">
+                  <motion.div
+                    className={`${stat.bgColor} p-3 rounded-lg`}
+                    whileHover={{
+                      scale: 1.1,
+                      rotate: 10,
+                      transition: { duration: 0.3 },
+                    }}
+                  >
+                    <stat.icon className={`h-6 w-6 text-white`} />
+                  </motion.div>
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium text-gray-500 mb-0.5">
+                      {stat.title}
+                    </p>
+                    <motion.h3
+                      variants={textVariants}
+                      className="text-2xl font-bold text-gray-900"
+                    >
+                      {stat.value}
+                    </motion.h3>
+                    <p
+                      className={`text-sm font-medium mt-0.5 ${
+                        stat.change.startsWith("+")
+                          ? "text-green-600"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {stat.change} vs last month
+                    </p>
+                  </div>
+                </div>
                 <motion.div
-                  variants={iconVariants}
-                  className={`p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4 bg-${action.color}-50`}
-                >
-                  <action.icon className={`h-6 w-6 text-${action.color}-600`} />
-                </motion.div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  {action.title}
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  {action.description}
-                </p>
-                <Link
-                  to={action.path}
-                  className={`text-sm font-medium text-${action.color}-600 hover:text-${action.color}-800 transition-colors duration-300`}
-                >
-                  Take Action →
-                </Link>
+                  className={`h-1 w-full ${stat.bgColor}`}
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                />
               </CardContent>
-              <div className={`h-1 w-full bg-${action.color}-500`}></div>
             </Card>
           </motion.div>
         ))}
@@ -93,4 +116,4 @@ const QuickActionCards = () => {
   );
 };
 
-export default QuickActionCards;
+export default StatCards;
