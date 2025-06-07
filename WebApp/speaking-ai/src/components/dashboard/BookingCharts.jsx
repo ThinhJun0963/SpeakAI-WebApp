@@ -14,7 +14,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "../../ui/Card";
+import { Card, CardContent, CardHeader } from "@mui/material";
 
 const COLORS = [
   "#3B82F6",
@@ -77,9 +77,7 @@ const LearningCharts = ({ courses }) => {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
       {/* Course Creation Over Time */}
       <Card>
-        <CardHeader>
-          <CardTitle>Courses Created by Month</CardTitle>
-        </CardHeader>
+        <CardHeader>Courses Created by Month</CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -102,9 +100,7 @@ const LearningCharts = ({ courses }) => {
 
       {/* Level Distribution */}
       <Card>
-        <CardHeader>
-          <CardTitle>Course Level Distribution</CardTitle>
-        </CardHeader>
+        <CardHeader>Course Level Distribution</CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -136,9 +132,7 @@ const LearningCharts = ({ courses }) => {
 
       {/* Premium vs Free */}
       <Card>
-        <CardHeader>
-          <CardTitle>Premium vs Free Courses</CardTitle>
-        </CardHeader>
+        <CardHeader>Premium vs Free Courses</CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -171,9 +165,7 @@ const LearningCharts = ({ courses }) => {
 
       {/* Max Point Distribution */}
       <Card>
-        <CardHeader>
-          <CardTitle>Max Point Distribution</CardTitle>
-        </CardHeader>
+        <CardHeader>Max Point Distribution</CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">

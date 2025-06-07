@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "../../ui/Card";
+import { Card, CardContent } from "@mui/material";
 
 const ActivityTable = ({ recentActivity }) => {
   const getStatusColor = (status) => {

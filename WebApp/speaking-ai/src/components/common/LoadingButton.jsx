@@ -1,16 +1,25 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-const LoadingButton = ({ loading, text, loadingText }) => {
+const LoadingButton = ({
+  loading,
+  text,
+  loadingText = "Loading...",
+  disabled = false,
+  className = "",
+}) => {
+  const isDisabled = loading || disabled;
+
   return (
     <motion.button
       type="submit"
-      disabled={loading}
+      disabled={isDisabled}
       className={`w-full py-3 px-4 rounded-lg font-medium text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 ${
-        loading ? "opacity-75 cursor-not-allowed" : ""
-      }`}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+        isDisabled ? "opacity-75 cursor-not-allowed" : ""
+      } ${className}`}
+      whileHover={!isDisabled ? { scale: 1.02 } : {}}
+      whileTap={!isDisabled ? { scale: 0.98 } : {}}
+      aria-label={isDisabled ? loadingText : text}
     >
       {loading ? (
         <div className="flex items-center justify-center">
@@ -19,6 +28,7 @@ const LoadingButton = ({ loading, text, loadingText }) => {
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <circle
               className="opacity-25"

@@ -6,8 +6,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import InputField from "../components/common/InputField";
 import LoadingButton from "../components/common/LoadingButton";
 import ErrorMessage from "../components/common/ErrorMessage";
-import { useAuth } from "../components/hooks/useAuth";
-import useModal from "../components/hooks/useModal";
+import { useAuth } from "../hooks/useAuth";
+import useModal from "../hooks/useModal";
 
 const LoginPage = () => {
   const { login, loginWithGoogle, error } = useAuth();

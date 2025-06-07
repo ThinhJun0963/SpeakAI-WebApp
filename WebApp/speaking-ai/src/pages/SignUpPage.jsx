@@ -5,8 +5,8 @@ import { User, Lock, Mail, Calendar, UserPlus } from "lucide-react";
 import InputField from "../components/common/InputField";
 import LoadingButton from "../components/common/LoadingButton";
 import ErrorMessage from "../components/common/ErrorMessage";
-import { useAuth } from "../components/hooks/useAuth";
-import useModal from "../components/hooks/useModal";
+import { useAuth } from "../hooks/useAuth";
+import useModal from "../hooks/useModal";
 import { validatePassword } from "../utils/validation";
 
 const SignUpPage = () => {
