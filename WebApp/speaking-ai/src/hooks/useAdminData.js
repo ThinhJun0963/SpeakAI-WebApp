@@ -1,8 +1,9 @@
+// src/hooks/useAdminData.js
 import { useState, useEffect } from "react";
 import { courseApi, voucherApi } from "../api/axiosInstance";
 
-const useAdminData = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+export const useAdminData = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [vouchers, setVouchers] = useState([]);
@@ -19,8 +20,7 @@ const useAdminData = () => {
         setCourses(coursesResponse?.result || coursesResponse || []);
         setVouchers(vouchersResponse?.result || vouchersResponse || []);
       } catch (err) {
-        setError("Failed to load data: " + err.message);
-        console.error(err);
+        setError("Failed to load admin data: " + err.message);
       } finally {
         setLoading(false);
       }

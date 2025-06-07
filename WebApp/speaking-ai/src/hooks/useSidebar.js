@@ -1,38 +1,33 @@
-import { useContext, useEffect, useState } from "react";
-import ApiContext from "../context/ApiContext";
+// src/hooks/useSidebar.js
+import { useState, useEffect } from "react";
+import { courseApi } from "../api/axiosInstance";
 
 const useSidebar = () => {
-  const { authApi, courseApi, voucherApi } = useContext(ApiContext);
   const [courseCount, setCourseCount] = useState(0);
-  const [voucherCount, setVoucherCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchCounts = async () => {
+  const fetchCounts = async () => {
+    try {
       setLoading(true);
-      try {
-        const [courses, vouchers] = await Promise.all([
-          courseApi.getCourses(),
-          voucherApi.getVouchers(),
-        ]);
-        setCourseCount(courses.length);
-        setVoucherCount(vouchers.length);
-      } catch (err) {
-        console.error("Failed to fetch counts:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCounts();
-  }, [courseApi, voucherApi]);
+      const coursesResponse = await courseApi.getAll();
 
-  const handleLogout = async () => {
-    await authApi.logout();
-    localStorage.clear();
-    window.location.href = "/login"; // Redirect for simplicity
+      setCourseCount(
+        coursesResponse?.result?.length || coursesResponse?.length || 0
+      );
+    } catch (err) {
+      setError(`Failed to fetch counts: ${err.message}`);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return { courseCount, voucherCount, loading, handleLogout };
+  useEffect(() => {
+    fetchCounts();
+  }, []);
+
+  return { courseCount, loading, error };
 };
 
 export default useSidebar;

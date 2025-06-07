@@ -4,7 +4,7 @@ import {
   MAX_POINT_OPTIONS,
   LEVEL_OPTIONS,
 } from "../../constants/courseOptions";
-import { useCourseApi } from "./useCourseApi";
+import useCourseApi from "../../hooks/useCourseApi";
 
 const { TabPane } = Tabs;
 

@@ -1,9 +1,10 @@
+// src/components/dashboard/StatCards.jsx
 import React from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Tag, CheckCircle, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@mui/material";
 
-const StatCards = ({ courses, vouchers }) => {
+const StatCards = ({ courses = [], vouchers = [] }) => {
   const stats = [
     {
       title: "Total Courses",
@@ -36,8 +37,10 @@ const StatCards = ({ courses, vouchers }) => {
     },
     {
       title: "Total Discounts",
-      value:
-        vouchers.reduce((sum, v) => sum + (v.discountPercentage || 0), 0) + "%",
+      value: `${vouchers.reduce(
+        (sum, v) => sum + (v.discountPercentage || 0),
+        0
+      )}%`,
       change:
         vouchers.length > 0 ? `+${Math.round(vouchers.length * 5)}%` : "0%",
       borderColor: "border-orange-200",

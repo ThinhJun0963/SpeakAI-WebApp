@@ -1,9 +1,11 @@
+// src/hooks/useCourseApi.js
 import { useContext } from "react";
 import ApiContext from "../context/ApiContext";
 
-const useCourseApi = () => {
+export const useCourseApi = () => {
   const { courseApi } = useContext(ApiContext);
 
+  const getAll = async () => await courseApi.getAll(); // Add this method
   const createCourse = async (courseData) => await courseApi.create(courseData);
   const getDetails = async (id) => await courseApi.getDetails(id);
   const updateCourse = async (id, data) => await courseApi.update(id, data);
@@ -18,6 +20,7 @@ const useCourseApi = () => {
     await courseApi.updateExercise(exerciseId, data);
 
   return {
+    getAll,
     createCourse,
     getDetails,
     updateCourse,

@@ -1,7 +1,8 @@
+// src/hooks/useDashboardData.js
 import { useState, useEffect } from "react";
 import { courseApi, voucherApi } from "../api/axiosInstance";
 
-const useDashboardData = () => {
+export const useDashboardData = () => {
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
   const [courseData, setCourseData] = useState([]);
@@ -105,7 +106,6 @@ const useDashboardData = () => {
     };
     fetchDashboardData();
   }, []);
-
   return { stats, activity, courseData, voucherData, loading, error };
 };
 

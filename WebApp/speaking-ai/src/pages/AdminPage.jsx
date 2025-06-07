@@ -4,7 +4,7 @@ import useAdminData from "../hooks/useAdminData";
 import MobileToggle from "../components/layout/MobileToggle";
 import SidebarContainer from "../components/layout/SidebarContainer";
 import MainContent from "../components/layout/MainContent";
-import { MemoizedOutlet } from "../components/layout/MemoizedOutlet";
+import MemoizedOutlet from "../components/layout/MemoizedOutlet";
 
 const AdminPage = () => {
   const { sidebarOpen, setSidebarOpen, loading, courses, vouchers, error } =

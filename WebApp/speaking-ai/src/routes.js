@@ -1,3 +1,6 @@
+// src/routes.js
+import React from "react";
+
 const routes = [
   { path: "/login", component: () => import("./pages/auth/LoginPage") },
   { path: "/sign-up", component: () => import("./pages/auth/SignUpPage") },
@@ -18,7 +21,7 @@ const routes = [
       {
         path: "courses/edit/:id",
         component: () => import("./components/course/CourseEditForm"),
-        wrapper: "useCourseEdit",
+        wrapper: () => import("./components/course/CourseEditWrapper"), // Assume a wrapper component
       },
       {
         path: "courses/:id/details",
@@ -35,7 +38,7 @@ const routes = [
       {
         path: "vouchers/edit/:id",
         component: () => import("./pages/voucher/VoucherEditPage"),
-        wrapper: "useVoucherEdit",
+        wrapper: () => import("./components/voucher/VoucherEditWrapper"), // Assume a wrapper component
       },
       {
         path: "transactions",
@@ -43,7 +46,8 @@ const routes = [
       },
       {
         path: "*",
-        component: () => import("react-router-dom").then((mod) => mod.Navigate),
+        component: () =>
+          import("react-router-dom").then((mod) => ({ default: mod.Navigate })),
         props: { to: "/" },
       },
     ],

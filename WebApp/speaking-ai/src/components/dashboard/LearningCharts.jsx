@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardHeader, CardContent } from "@mui/material";
-import { useDashboardData } from "./useDashboardData";
+import useDashboardData from "../../hooks/useDashboardData";
 import ChartComponent from "./ChartComponent";
 
 const COLORS = [

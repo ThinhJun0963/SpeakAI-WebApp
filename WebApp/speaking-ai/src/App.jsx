@@ -1,18 +1,23 @@
+// src/App.jsx
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { Suspense } from "react";
 import { ToastContainer } from "react-toastify";
-import routes from "./routes";
 import ApiContext from "./context/ApiContext";
 import { courseApi, voucherApi } from "./api/axiosInstance";
+import routes from "./routes";
 
 const clientId =
   "1018910450198-m8sitc37vcjdg1qbe7d3cp00nca00840.apps.googleusercontent.com";
 
 const renderRoute = (route) => {
-  const Component = route.component();
+  const Component = lazy(route.component);
   const Wrapper = route.wrapper
-    ? require(`./hooks/${route.wrapper}`).default
+    ? lazy(() =>
+        import(`./components/${route.wrapper}`).then((mod) => ({
+          default: mod.default || (({ children }) => children),
+        }))
+      )
     : ({ children }) => children;
 
   return (

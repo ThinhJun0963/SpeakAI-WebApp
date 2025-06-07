@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home, Users, Tag, CreditCard, LogOut, Menu } from "lucide-react";
 import { Tooltip } from "antd";
-import useSidebar from "./useSidebar";
+import useSidebar from "../../hooks/useSidebar";
 import SidebarSkeleton from "./SidebarSkeleton";
 
 const menuItems = [

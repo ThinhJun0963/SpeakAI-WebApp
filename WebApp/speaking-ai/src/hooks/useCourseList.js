@@ -1,10 +1,12 @@
+// src/hooks/useCourseList.js
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Modal } from "antd";
 import useCourseApi from "./useCourseApi";
 import debounce from "lodash/debounce";
+import { useNavigate } from "react-router-dom";
 
 const useCourseList = () => {
-  const { deleteCourse } = useCourseApi();
+  const { getAll: fetchAllCourses, deleteCourse } = useCourseApi(); // Destructure getAll method
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,7 +21,7 @@ const useCourseList = () => {
       if (!forceFetch && !isInitialFetch.current) return;
       setLoading(true);
       try {
-        const data = await courseApi.getAll(); // Updated to use courseApi directly
+        const data = await fetchAllCourses(); // Use the getAll method from useCourseApi
         const sortedData = Array.isArray(data)
           ? data.sort((a, b) => {
               const dateA = new Date(a.updatedAt || a.createdAt);
@@ -40,7 +42,7 @@ const useCourseList = () => {
         setLoading(false);
       }
     },
-    [navigate]
+    [fetchAllCourses, navigate] // Update dependency array
   );
 
   useEffect(() => {

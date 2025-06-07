@@ -45,7 +45,7 @@ const Header = ({ className }) => {
         <div className="flex items-center space-x-4"></div>
         <div className="flex items-center space-x-4">
           <Dropdown
-            overlay={profileMenu}
+            menu={profileMenu}
             trigger={["click"]}
             placement="bottomRight"
           >
