@@ -1,9 +1,9 @@
 const routes = [
-  { path: "/login", component: () => import("./pages/LoginPage") },
-  { path: "/sign-up", component: () => import("./pages/SignUpPage") },
+  { path: "/login", component: () => import("./pages/auth/LoginPage") },
+  { path: "/sign-up", component: () => import("./pages/auth/SignUpPage") },
   {
     path: "/forgot-password",
-    component: () => import("./pages/ForgotPasswordPage"),
+    component: () => import("./pages/auth/ForgotPasswordPage"),
   },
   {
     path: "/",
