@@ -1,20 +1,22 @@
-import React, { useState } from "react";
+import React from "react";
 import { Form, Input, InputNumber, Switch, Button, Modal, Select } from "antd";
-import { courseApi } from "../../api/axiosInstance";
+import { useCourseApi } from "./useCourseApi";
+
+const { Option } = Select;
 
 const CreateCourseForm = ({ visible, onClose, onSuccess }) => {
+  const { createCourse } = useCourseApi();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      await courseApi.create(values);
+      await createCourse(values);
       form.resetFields();
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Failed to create course:", error);
       alert("Failed to create course. Please try again.");
     } finally {
       setLoading(false);
@@ -48,7 +50,6 @@ const CreateCourseForm = ({ visible, onClose, onSuccess }) => {
         >
           <Input placeholder="Enter course name" />
         </Form.Item>
-
         <Form.Item
           name="description"
           label="Description"
@@ -56,7 +57,6 @@ const CreateCourseForm = ({ visible, onClose, onSuccess }) => {
         >
           <Input.TextArea rows={4} placeholder="Enter course description" />
         </Form.Item>
-
         <Form.Item
           name="maxPoint"
           label="Max Points"
@@ -64,32 +64,28 @@ const CreateCourseForm = ({ visible, onClose, onSuccess }) => {
         >
           <InputNumber min={0} style={{ width: "100%" }} />
         </Form.Item>
-
         <Form.Item
           name="levelId"
           label="Level"
           rules={[{ required: true, message: "Please select a level" }]}
         >
           <Select>
-            <Select.Option value={1}>Beginner</Select.Option>
-            <Select.Option value={2}>Intermediate</Select.Option>
-            <Select.Option value={3}>Advanced</Select.Option>
-            {/* Add more levels as needed */}
+            {[1, 2, 3].map((v) => (
+              <Option key={v} value={v}>
+                {["Beginner", "Intermediate", "Advanced"][v - 1]}
+              </Option>
+            ))}
           </Select>
         </Form.Item>
-
         <Form.Item name="isFree" label="Free Course" valuePropName="checked">
           <Switch />
         </Form.Item>
-
         <Form.Item name="isActive" label="Active" valuePropName="checked">
           <Switch />
         </Form.Item>
-
         <Form.Item name="isLock" label="Locked" valuePropName="checked">
           <Switch />
         </Form.Item>
-
         <Form.Item className="flex justify-end">
           <Button onClick={onClose} style={{ marginRight: 8 }}>
             Cancel

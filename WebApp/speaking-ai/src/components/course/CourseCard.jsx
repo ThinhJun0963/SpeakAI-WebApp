@@ -1,41 +1,22 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button, Card, Tag, Typography } from "antd";
-import { courseApi } from "../../api/axiosInstance";
+import { useCourseApi } from "./useCourseApi";
 import CourseEditForm from "./CourseEditForm";
 
 const { Text } = Typography;
 
-const CourseCard = ({ course, onRefresh, onUpdate, updatedStatus }) => {
-  const [editModalVisible, setEditModalVisible] = useState(false);
+const CourseCard = ({ course, onRefresh }) => {
+  const { deleteCourse } = useCourseApi();
+  const [editModalVisible, setEditModalVisible] = React.useState(false);
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this course?")) {
-      try {
-        await courseApi.delete(course.id);
-        onRefresh();
-      } catch (error) {
-        alert("Failed to delete course.");
-        console.error("Delete error:", error);
-      }
+      await deleteCourse(course.id);
+      onRefresh();
     }
   };
 
-  const handleEditSuccess = (isFree) => {
-    onUpdate(course.id, isFree);
-    setEditModalVisible(false);
-  };
-
-  const levelMap = {
-    1: "Beginner",
-    2: "Intermediate",
-    3: "Advanced",
-  };
-
-  const isFree =
-    updatedStatus?.isFree !== undefined
-      ? updatedStatus.isFree
-      : course.isFree ?? true;
-  const isPremium = course.isPremium ?? false;
+  const levelMap = { 1: "Beginner", 2: "Intermediate", 3: "Advanced" };
 
   return (
     <>
@@ -45,8 +26,8 @@ const CourseCard = ({ course, onRefresh, onUpdate, updatedStatus }) => {
         style={{ width: "100%" }}
         extra={
           <div>
-            {isFree && <Tag color="#52c41a">Free</Tag>}
-            {isPremium && <Tag color="#faad14">Premium</Tag>}
+            {course.isFree && <Tag color="#52c41a">Free</Tag>}
+            {course.isPremium && <Tag color="#faad14">Premium</Tag>}
           </div>
         }
       >
@@ -86,12 +67,11 @@ const CourseCard = ({ course, onRefresh, onUpdate, updatedStatus }) => {
           </div>
         </div>
       </Card>
-
       <CourseEditForm
-        course={course}
+        courseId={course.id}
         visible={editModalVisible}
         onCancel={() => setEditModalVisible(false)}
-        onSuccess={handleEditSuccess}
+        onSuccess={onRefresh}
       />
     </>
   );
