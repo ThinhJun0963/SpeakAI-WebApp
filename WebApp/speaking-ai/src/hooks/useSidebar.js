@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import ApiContext from "../../context/ApiContext";
+import ApiContext from "../context/ApiContext";
 
 const useSidebar = () => {
   const { authApi, courseApi, voucherApi } = useContext(ApiContext);
