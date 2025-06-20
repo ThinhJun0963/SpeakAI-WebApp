@@ -1,40 +1,20 @@
 import React, { useState, useEffect } from "react";
+import { Modal, Form, Input, Select, Button, Upload } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { courseApi } from "../../api/axiosInstance";
-import { Form, Input, Select, Button, Modal, Tabs, Skeleton } from "antd";
 import {
   MAX_POINT_OPTIONS,
   LEVEL_OPTIONS,
 } from "../../constants/courseOptions";
 
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [courseData, setCourseData] = useState(null);
-  const [topics, setTopics] = useState([]);
-
-  const parseExerciseContent = (content) => {
-    try {
-      if (typeof content !== "string") {
-        throw new Error("Content is not a string");
-      }
-      if (content.trim().startsWith("{")) {
-        return JSON.parse(content);
-      }
-      return { type: "text", question: content, answer: "", explanation: "" };
-    } catch (error) {
-      console.warn("Failed to parse exercise content:", content, error);
-      return {
-        type: "text",
-        question: content || "Invalid content",
-        answer: "",
-        explanation: "Could not parse content",
-      };
-    }
-  };
+  const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
     if (visible && courseId) {
@@ -43,15 +23,6 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
         try {
           const data = await courseApi.getDetails(courseId);
           setCourseData(data);
-          setTopics(
-            data.topics.map((t) => ({
-              ...t,
-              exercises: t.exercises.map((e) => ({
-                ...e,
-                content: parseExerciseContent(e.content),
-              })),
-            }))
-          );
           form.setFieldsValue({
             courseName: data.courseName,
             description: data.description,
@@ -59,6 +30,7 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
             levelId: data.levelId,
             isPremium: data.isPremium,
           });
+          setImageFile(null); // Reset image file on load
         } catch (error) {
           console.error("Error fetching course data:", error);
           Modal.error({
@@ -73,50 +45,12 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
     }
   }, [visible, courseId, form]);
 
-  const handleMaxPointChange = (newMaxPoint) => {
-    const updatedTopics = topics.map((topic) => {
-      const newTopicMaxPoint = newMaxPoint / topics.length;
-      const exercises = topic.exercises.map((exercise) => ({
-        ...exercise,
-        maxPoint: newTopicMaxPoint / topic.exercises.length,
-      }));
-      return { ...topic, maxPoint: newTopicMaxPoint, exercises };
-    });
-    setTopics(updatedTopics);
-  };
-
   const handleFinish = async (values) => {
     setLoading(true);
     try {
-      // Cập nhật course
-      await courseApi.update(courseId, {
-        courseName: values.courseName,
-        description: values.description,
-        maxPoint: values.maxPoint,
-        isPremium: values.isPremium,
-        levelId: values.levelId,
-      });
-
-      // Cập nhật topics và exercises với maxPoint mới
-      const topicPromises = topics.map((topic) =>
-        courseApi.updateTopic(topic.id, {
-          topicName: topic.topicName,
-          maxPoint: topic.maxPoint,
-          isActive: topic.isActive !== undefined ? topic.isActive : true,
-        })
-      );
-
-      const exercisePromises = topics.flatMap((topic) =>
-        topic.exercises.map((exercise) =>
-          courseApi.updateExercise(exercise.id, {
-            content: JSON.stringify(exercise.content),
-            maxPoint: exercise.maxPoint,
-          })
-        )
-      );
-
-      await Promise.all([...topicPromises, ...exercisePromises]);
-
+      const updatedData = { ...values };
+      if (imageFile) updatedData.image = imageFile;
+      await courseApi.update(courseId, updatedData);
       Modal.success({
         title: "Success",
         content: "Course updated successfully.",
@@ -132,16 +66,9 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
     }
   };
 
-  const handleTopicChange = (index, field, value) => {
-    const updatedTopics = [...topics];
-    updatedTopics[index][field] = value;
-    setTopics(updatedTopics);
-  };
-
-  const handleExerciseChange = (topicIndex, exerciseIndex, field, value) => {
-    const updatedTopics = [...topics];
-    updatedTopics[topicIndex].exercises[exerciseIndex].content[field] = value;
-    setTopics(updatedTopics);
+  const handleUpload = ({ file }) => {
+    setImageFile(file);
+    return false; // Prevent default upload
   };
 
   return (
@@ -150,178 +77,113 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
       open={visible}
       onCancel={onCancel}
       footer={null}
-      width={800}
+      width={600}
+      className="rounded-xl"
     >
       {fetchLoading ? (
-        <Skeleton active paragraph={{ rows: 5 }} />
+        <div className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+          </div>
+        </div>
       ) : (
-        <Tabs defaultActiveKey="1">
-          <TabPane tab="Course Info" key="1">
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handleFinish}
-              onValuesChange={(changedValues) => {
-                if (changedValues.maxPoint) {
-                  handleMaxPointChange(changedValues.maxPoint);
-                }
-              }}
-              className="space-y-4 p-4"
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleFinish}
+          className="space-y-6 p-4"
+        >
+          <Form.Item
+            name="courseName"
+            label="Course Name"
+            rules={[{ required: true, message: "Please enter course name" }]}
+          >
+            <Input placeholder="Enter course name" className="rounded-md" />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[{ required: true, message: "Please enter description" }]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="Enter description"
+              className="rounded-md"
+            />
+          </Form.Item>
+          <Form.Item
+            name="maxPoint"
+            label="Max Point"
+            rules={[{ required: true, message: "Please select max point" }]}
+          >
+            <Select
+              placeholder="Select max point"
+              className="w-full rounded-md"
             >
-              <Form.Item
-                name="courseName"
-                label="Course Name"
-                rules={[
-                  { required: true, message: "Please enter course name" },
-                ]}
-              >
-                <Input placeholder="Enter course name" />
-              </Form.Item>
-              <Form.Item
-                name="description"
-                label="Description"
-                rules={[
-                  { required: true, message: "Please enter description" },
-                ]}
-              >
-                <Input.TextArea rows={4} placeholder="Enter description" />
-              </Form.Item>
-              <Form.Item
-                name="maxPoint"
-                label="Max Point"
-                rules={[{ required: true, message: "Please select max point" }]}
-              >
-                <Select placeholder="Select max point">
-                  {MAX_POINT_OPTIONS.map((option) => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item
-                name="levelId"
-                label="Level"
-                rules={[{ required: true, message: "Please select level" }]}
-              >
-                <Select placeholder="Select level">
-                  {LEVEL_OPTIONS.map((option) => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item name="isPremium" label="Premium Status">
-                <Select placeholder="Is this course premium?">
-                  <Option value={true}>Yes</Option>
-                  <Option value={false}>No</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item className="flex justify-end space-x-2">
-                <Button onClick={onCancel} disabled={loading}>
-                  Cancel
-                </Button>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Save
-                </Button>
-              </Form.Item>
-            </Form>
-          </TabPane>
-          <TabPane tab="Topics & Exercises" key="2">
-            <div className="p-4 space-y-4">
-              {topics.map((topic, topicIndex) => (
-                <div key={topic.id} className="border p-4 rounded-md">
-                  <Input
-                    value={topic.topicName}
-                    onChange={(e) =>
-                      handleTopicChange(topicIndex, "topicName", e.target.value)
-                    }
-                    placeholder="Topic Name"
-                    className="mb-2"
-                  />
-                  <p>Max Point: {topic.maxPoint} (Cannot be edited)</p>
-                  <div className="space-y-2">
-                    {topic.exercises.map((exercise, exerciseIndex) => (
-                      <div key={exercise.id} className="ml-4">
-                        <Input
-                          value={exercise.content.type}
-                          onChange={(e) =>
-                            handleExerciseChange(
-                              topicIndex,
-                              exerciseIndex,
-                              "type",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Exercise Type"
-                          className="mb-2"
-                        />
-                        <Input.TextArea
-                          value={exercise.content.question}
-                          onChange={(e) =>
-                            handleExerciseChange(
-                              topicIndex,
-                              exerciseIndex,
-                              "question",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Question"
-                          rows={2}
-                          className="mb-2"
-                        />
-                        {exercise.content.type === "multiple_choice" && (
-                          <Input
-                            value={exercise.content.options?.join(", ")}
-                            onChange={(e) =>
-                              handleExerciseChange(
-                                topicIndex,
-                                exerciseIndex,
-                                "options",
-                                e.target.value.split(", ")
-                              )
-                            }
-                            placeholder="Options (comma-separated)"
-                            className="mb-2"
-                          />
-                        )}
-                        <Input
-                          value={exercise.content.answer}
-                          onChange={(e) =>
-                            handleExerciseChange(
-                              topicIndex,
-                              exerciseIndex,
-                              "answer",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Answer"
-                          className="mb-2"
-                        />
-                        <Input.TextArea
-                          value={exercise.content.explanation}
-                          onChange={(e) =>
-                            handleExerciseChange(
-                              topicIndex,
-                              exerciseIndex,
-                              "explanation",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Explanation"
-                          rows={2}
-                          className="mb-2"
-                        />
-                        <p>Max Point: {exercise.maxPoint} (Cannot be edited)</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {MAX_POINT_OPTIONS.map((option) => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
               ))}
-            </div>
-          </TabPane>
-        </Tabs>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="levelId"
+            label="Level"
+            rules={[{ required: true, message: "Please select level" }]}
+          >
+            <Select placeholder="Select level" className="w-full rounded-md">
+              {LEVEL_OPTIONS.map((option) => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="isPremium"
+            label="Premium Status"
+            valuePropName="checked"
+          >
+            <input
+              type="checkbox"
+              className="rounded text-blue-600 focus:ring-blue-500"
+            />
+          </Form.Item>
+          <Form.Item
+            name="image"
+            label="Course Image"
+            rules={[{ required: false, message: "Please upload an image" }]}
+          >
+            <Upload
+              beforeUpload={handleUpload}
+              fileList={imageFile ? [imageFile] : []}
+              maxCount={1}
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />}>Upload Image (JPG/PNG)</Button>
+            </Upload>
+          </Form.Item>
+          <div className="flex justify-end space-x-4">
+            <Button
+              onClick={onCancel}
+              disabled={loading}
+              className="rounded-md"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              className="rounded-md bg-blue-600"
+            >
+              Save
+            </Button>
+          </div>
+        </Form>
       )}
     </Modal>
   );

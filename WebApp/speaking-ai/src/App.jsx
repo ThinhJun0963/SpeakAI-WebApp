@@ -1,5 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
@@ -7,7 +12,6 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import AdminPage from "./pages/AdminPage";
 import DashboardHome from "./pages/DashboardHome";
 import CoursePage from "./pages/course/CoursePage";
-import CreateCoursePage from "./pages/course/CreateCoursePage";
 import CourseDetailPage from "./pages/course/CourseDetailPage";
 import CourseEditForm from "./components/course/CourseEditForm";
 import VoucherPage from "./pages/voucher/VoucherPage";
@@ -19,7 +23,7 @@ import { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 
 const clientId =
-  "1018910450198-m8sitc37vcjdg1qbe7d3cp00nca00840.apps.googleusercontent.com"; // Web client ID từ Google Cloud Console
+  "1018910450198-m8sitc37vcjdg1qbe7d3cp00nca00840.apps.googleusercontent.com";
 
 function App() {
   return (
@@ -32,15 +36,6 @@ function App() {
           <Route element={<AdminPage />}>
             <Route path="/" element={<DashboardHome />} />
             <Route path="/courses" element={<CoursePage />} />
-            <Route
-              path="/courses/create"
-              element={
-                <CreateCoursePage
-                  onComplete={() => window.history.back()}
-                  onCancel={() => window.history.back()}
-                />
-              }
-            />
             <Route
               path="/courses/edit/:id"
               element={<CourseEditFormWrapper />}

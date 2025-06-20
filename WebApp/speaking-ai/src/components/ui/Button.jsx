@@ -1,9 +1,12 @@
-export const Button = ({
+import React from "react";
+
+const Button = ({
   children,
   variant = "primary",
   size = "medium",
   isLoading = false,
   disabled = false,
+  type = "button", // Default to "button" to support form submission
   ...props
 }) => {
   const variants = {
@@ -20,6 +23,7 @@ export const Button = ({
 
   return (
     <button
+      type={type} // Use the type prop for form submission
       className={`
         rounded transition-colors
         ${variants[variant]}
@@ -33,3 +37,5 @@ export const Button = ({
     </button>
   );
 };
+
+export default Button;

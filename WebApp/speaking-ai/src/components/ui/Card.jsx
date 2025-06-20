@@ -32,4 +32,8 @@ const CardContent = React.forwardRef(({ className, ...props }, ref) => (
 ));
 CardContent.displayName = "CardContent";
 
+// Export all components as named exports
 export { Card, CardHeader, CardTitle, CardContent };
+
+// Set Card as the default export
+export default Card;
