@@ -41,10 +41,10 @@ const Header = ({ className }) => {
               Modal.destroyAll();
             }}
           >
-            Có
+            Yes
           </Button>
           <Button key="cancel" onClick={() => Modal.destroyAll()}>
-            Không
+            No
           </Button>
         </div>
       ),
@@ -56,7 +56,7 @@ const Header = ({ className }) => {
     items: [
       {
         key: "logout",
-        label: "Đăng xuất",
+        label: "Logout",
         icon: <LogOut className="h-4 w-4" />,
         onClick: handleLogout,
       },
