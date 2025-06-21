@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
-import { authApi } from "../../api/authApi";
+import { authApi } from "../api/authApi";
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);

@@ -1,13 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-const ErrorMessage = ({ message }) => {
+const ErrorMessage = ({ message, className = "" }) => {
   return (
     <motion.div
+      role="alert"
+      aria-live="polite"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="rounded-lg bg-red-50 p-4 shadow-sm border border-red-200"
+      className={`rounded-lg bg-red-50 p-4 shadow-sm border border-red-200 ${className}`}
     >
       <div className="flex items-center">
         <svg
@@ -15,6 +17,7 @@ const ErrorMessage = ({ message }) => {
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"

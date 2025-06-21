@@ -6,10 +6,13 @@ import {
   MAX_POINT_OPTIONS,
   LEVEL_OPTIONS,
 } from "../../constants/courseOptions";
+import { useCourseApi } from "./useCourseApi";
 
 const { Option } = Select;
 
 const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
+  const { getDetails, updateCourse, updateTopic, updateExercise } =
+    useCourseApi();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -57,10 +60,7 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
         onOk: onSuccess,
       });
     } catch (error) {
-      Modal.error({
-        title: "Error",
-        content: "Failed to update course.",
-      });
+      Modal.error({ title: "Error", content: "Failed to update course." });
     } finally {
       setLoading(false);
     }

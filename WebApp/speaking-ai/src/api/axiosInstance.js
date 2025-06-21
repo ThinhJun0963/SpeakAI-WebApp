@@ -1,12 +1,14 @@
 import axios from "axios";
 
+// Create axios instance with dynamic base URL and timeout
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://sai.runasp.net/api", // Dynamic or fallback URL
   // No default headers to allow axios to set Content-Type based on FormData
 });
 
+// Request interceptor for token
 axiosInstance.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = localStorage.getItem("accessToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
     // Let axios set Content-Type to multipart/form-data automatically for FormData
@@ -18,11 +20,15 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response interceptor with enhanced error handling
 axiosInstance.interceptors.response.use(
-  (response) => response.data.result || response.data,
+  (response) => response.data,
   (error) => {
-    console.log("Response error:", error.response?.data || error);
-    return Promise.reject(error.response?.data || error);
+    if (error.response?.status === 401) {
+      localStorage.removeItem("accessToken");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error.response?.data?.message || error.message);
   }
 );
 
@@ -41,9 +47,9 @@ export const courseApi = {
   addExercise: (topicId, exerciseData) =>
     axiosInstance.post(`/courses/topics/${topicId}/exercises`, exerciseData),
   getExercise: (exerciseId) =>
-    axiosInstance.get(`/courses/exercise/${exerciseId}`),
+    axiosInstance.get(`/courses/exercises/${exerciseId}`),
   updateExercise: (exerciseId, exerciseData) =>
-    axiosInstance.put(`/courses/exercise/${exerciseId}`, exerciseData),
+    axiosInstance.put(`/courses/exercises/${exerciseId}`, exerciseData),
   deleteExercise: (exerciseId) =>
     axiosInstance.delete(`/courses/exercise/${exerciseId}`),
   getPaged: (params) => axiosInstance.get("/courses/paged", { params }),
@@ -59,14 +65,16 @@ export const voucherApi = {
   update: (id, voucherData) => axiosInstance.put(`/Voucher/${id}`, voucherData),
   delete: (id) => axiosInstance.delete(`/Voucher/${id}`),
   checkAndDisable: () => axiosInstance.post("/Voucher/check-and-disable"),
+  getByCode: (voucherCode) =>
+    axiosInstance.get(`/api/Voucher/${voucherCode}`, {
+      headers: { Accept: "text/plain" },
+    }),
 };
 
 export const transactionApi = {
   getList: (status, pageNumber, pageSize) => {
     const params = { PageNumber: pageNumber, PageSize: pageSize };
-    if (status && status !== "All") {
-      params.Status = status;
-    }
+    if (status && status !== "All") params.Status = status;
     return axiosInstance.get("/transactions", { params });
   },
   getUserTransactions: (userId, status, pageNumber, pageSize) => {

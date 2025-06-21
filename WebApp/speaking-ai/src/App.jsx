@@ -20,8 +20,6 @@ import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
 import VoucherEditPage from "./pages/voucher/VoucherEditPage";
 import TransactionPage from "./pages/transaction/TransactionPage";
 import { courseApi, voucherApi } from "./api/axiosInstance";
-import { useState, useEffect } from "react";
-import { ToastContainer } from "react-toastify";
 
 const clientId =
   "1018910450198-m8sitc37vcjdg1qbe7d3cp00nca00840.apps.googleusercontent.com";

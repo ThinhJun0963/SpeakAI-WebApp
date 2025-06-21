@@ -15,6 +15,7 @@ const getAvatar = () => {
 
 const Header = ({ className }) => {
   const navigate = useNavigate();
+  const { authApi } = useContext(ApiContext);
 
   const handleLogout = () => {
     Modal.confirm({

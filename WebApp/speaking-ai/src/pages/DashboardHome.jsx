@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "antd";
 import StatCards from "../components/dashboard/StatCards";
-import LearningCharts from "../components/dashboard/BookingCharts";
+import LearningCharts from "../components/dashboard/LearningCharts";
 import ActivityTable from "../components/dashboard/ActivityTable";
 import QuickActionCards from "../components/dashboard/QuickActionCards";
 import { courseApi, voucherApi } from "../api/axiosInstance";

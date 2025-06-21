@@ -1,14 +1,15 @@
 // LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
-import InputField from "../components/login/InputField";
-import LoadingButton from "../components/login/LoadingButton";
-import ErrorMessage from "../components/login/ErrorMessage";
-import { useAuth } from "../components/hooks/useAuth";
-import useModal from "../components/hooks/useModal";
+import LoginForm from "../../components/auth/LoginForm";
+import ErrorMessage from "../../components/common/ErrorMessage";
+import LoadingButton from "../../components/common/LoadingButton";
+import InputField from "../../components/common/InputField"; // Updated import
+import { useAuth } from "../../hooks/useAuth";
+import useModal from "../../hooks/useModal";
 
 const LoginPage = () => {
   const { login, loginWithGoogle, error } = useAuth();
@@ -77,22 +78,38 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-4 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <motion.div className="text-center mb-8">
+        <div className="bg-white/90 rounded-2xl shadow-2xl p-8 backdrop-blur-sm border border-white/20">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="text-center mb-8"
+          >
             <h1 className="text-3xl font-bold text-gray-900">Welcome Back!</h1>
             <p className="mt-2 text-sm text-gray-500">
               Log in to continue your journey
             </p>
           </motion.div>
 
-          {error && <ErrorMessage message={error} />}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4"
+              >
+                <ErrorMessage message={error} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-3 mt-6">
             <InputField
@@ -158,6 +175,7 @@ const LoginPage = () => {
               disabled={loadingGoogle}
             />
           </div>
+
 
           <p className="mt-6 text-center text-sm text-gray-600">
             Don’t have an account?{" "}
