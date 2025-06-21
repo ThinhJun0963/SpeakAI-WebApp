@@ -9,8 +9,9 @@ import {
   Skeleton,
   Pagination,
   Tooltip,
+  Image,
 } from "antd";
-import { Plus, Search, Edit, Trash, Eye } from "lucide-react";
+import { Plus, Search, Edit, Trash, Eye, Book, Dumbbell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CreateCourseForm from "../../components/course/CreateCourseForm";
 import debounce from "lodash/debounce";
@@ -23,11 +24,7 @@ const CoursePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
-  const { loading, trackAsyncOperation } = usePageLoading({
-    delay: 400,
-    onLoadStart: () => console.log("Loading started"),
-    onLoadEnd: () => console.log("Loading ended"),
-  });
+  const { loading, trackAsyncOperation } = usePageLoading({});
 
   const fetchCourses = useCallback(async () => {
     return trackAsyncOperation(
@@ -68,6 +65,22 @@ const CoursePage = () => {
   };
 
   const columns = [
+    {
+      title: "Image",
+      dataIndex: "imageUrl",
+      key: "imageUrl",
+      width: 100,
+      render: (url) => (
+        <Image
+          src={url || "/placeholder-image.jpg"}
+          alt="Course Image"
+          width={80}
+          height={80}
+          className="rounded-lg object-cover"
+          fallback="/placeholder-image.jpg"
+        />
+      ),
+    },
     {
       title: "Course Name",
       dataIndex: "courseName",
@@ -118,7 +131,7 @@ const CoursePage = () => {
     {
       title: "Actions",
       key: "actions",
-      width: 150,
+      width: 200,
       align: "center",
       render: (_, record) => (
         <div className="flex space-x-2 justify-center">
@@ -142,8 +155,18 @@ const CoursePage = () => {
             <Button
               icon={<Trash className="text-red-600" />}
               danger
-              onClick={() => handleDelete(record.id, courseName)}
+              onClick={() => handleDelete(record.id, record.courseName)}
               className="border-none hover:bg-red-50 rounded-full p-2"
+              disabled={loading}
+            />
+          </Tooltip>
+          <Tooltip title="Add Topic/Exercise">
+            <Button
+              icon={<Book className="text-purple-600" />}
+              onClick={() =>
+                navigate(`/courses/${record.id}/add-topic-exercise`)
+              }
+              className="border-none hover:bg-purple-50 rounded-full p-2"
               disabled={loading}
             />
           </Tooltip>

@@ -1,3 +1,4 @@
+// CourseCard.jsx
 import React, { useState } from "react";
 import { Button, Card, Tag, Typography } from "antd";
 import { courseApi } from "../../../api/axiosInstance";
@@ -30,7 +31,7 @@ const CourseCard = ({ course, onRefresh }) => {
   return (
     <Card
       hoverable
-      className="shadow-lg rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl"
+      className="bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl border border-gray-100"
       cover={
         course.imageUrl && (
           <img
@@ -45,16 +46,14 @@ const CourseCard = ({ course, onRefresh }) => {
           key="edit"
           type="link"
           onClick={() => setEditModalVisible(true)}
-          className="text-blue-600 hover:text-blue-800"
+          className="text-blue-600 hover:text-blue-800 font-medium"
         >
           Edit
         </Button>,
         <Button
           key="delete"
-          type="link"
-          danger
           onClick={handleDelete}
-          className="text-red-600 hover:text-red-800"
+          className="bg-red-600 text-white hover:bg-red-700 font-medium rounded-xl px-4 py-2 transition-all duration-300 shadow-md hover:shadow-lg"
         >
           Delete
         </Button>,

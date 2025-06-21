@@ -36,7 +36,6 @@ export const usePageLoading = ({
   // Track pathname changes
   useEffect(() => {
     if (location.pathname !== prevPathnameRef.current) {
-      console.log("[usePageLoading] Location changed:", location.pathname);
       startLoading();
       prevPathnameRef.current = location.pathname;
     }
@@ -59,7 +58,6 @@ export const usePageLoading = ({
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
-        console.log("[usePageLoading] Cleaning up timeout on unmount");
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }

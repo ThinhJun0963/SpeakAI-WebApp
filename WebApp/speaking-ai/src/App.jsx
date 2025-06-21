@@ -14,6 +14,7 @@ import DashboardHome from "./pages/DashboardHome";
 import CoursePage from "./pages/course/CoursePage";
 import CourseDetailPage from "./pages/course/CourseDetailPage";
 import CourseEditForm from "./components/course/CourseEditForm";
+import AddTopicExercisePage from "./pages/course/AddTopicExercisePage"; // New component
 import VoucherPage from "./pages/voucher/VoucherPage";
 import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
 import VoucherEditPage from "./pages/voucher/VoucherEditPage";
@@ -41,6 +42,10 @@ function App() {
               element={<CourseEditFormWrapper />}
             />
             <Route path="/courses/:id/details" element={<CourseDetailPage />} />
+            <Route
+              path="/courses/:id/add-topic-exercise"
+              element={<AddTopicExercisePageWrapper />}
+            />
             <Route path="/vouchers" element={<VoucherPage />} />
             <Route
               path="/vouchers/create"
@@ -124,6 +129,33 @@ const VoucherEditFormWrapper = () => {
       visible={true}
       onCancel={() => navigate("/vouchers")}
       onSuccess={() => navigate("/vouchers")}
+    />
+  );
+};
+
+const AddTopicExercisePageWrapper = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [course, setCourse] = useState(null);
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const data = await courseApi.getDetails(id);
+        setCourse(data);
+      } catch (error) {
+        console.error("Failed to fetch course:", error);
+      }
+    };
+    fetchCourse();
+  }, [id]);
+
+  return (
+    <AddTopicExercisePage
+      courseId={id}
+      course={course}
+      onCancel={() => navigate(`/courses/${id}/details`)}
+      onSuccess={() => navigate(`/courses/${id}/details`)}
     />
   );
 };
