@@ -160,16 +160,6 @@ const CoursePage = () => {
               disabled={loading}
             />
           </Tooltip>
-          <Tooltip title="Add Topic/Exercise">
-            <Button
-              icon={<Book className="text-purple-600" />}
-              onClick={() =>
-                navigate(`/courses/${record.id}/add-topic-exercise`)
-              }
-              className="border-none hover:bg-purple-50 rounded-full p-2"
-              disabled={loading}
-            />
-          </Tooltip>
         </div>
       ),
     },

@@ -14,7 +14,7 @@ import DashboardHome from "./pages/DashboardHome";
 import CoursePage from "./pages/course/CoursePage";
 import CourseDetailPage from "./pages/course/CourseDetailPage";
 import CourseEditForm from "./components/course/CourseEditForm";
-import AddTopicExercisePage from "./pages/course/AddTopicExercisePage"; // New component
+import AddTopicExercisePage from "./pages/course/AddTopicExercisePage";
 import VoucherPage from "./pages/voucher/VoucherPage";
 import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
 import VoucherEditPage from "./pages/voucher/VoucherEditPage";
@@ -22,6 +22,8 @@ import TransactionPage from "./pages/transaction/TransactionPage";
 import { courseApi, voucherApi } from "./api/axiosInstance";
 import { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
+import EditExercisePage from "./pages/course/EditExercisePage"; // Sửa import
+import EditTopicPage from "./pages/course/EditTopicPage";
 
 const clientId =
   "1018910450198-m8sitc37vcjdg1qbe7d3cp00nca00840.apps.googleusercontent.com";
@@ -42,6 +44,14 @@ function App() {
               element={<CourseEditFormWrapper />}
             />
             <Route path="/courses/:id/details" element={<CourseDetailPage />} />
+            <Route
+              path="/courses/:id/edit-topic/:topicId"
+              element={<EditTopicPage />}
+            />
+            <Route
+              path="/courses/:id/edit-exercise/:exerciseId"
+              element={<EditExercisePageWrapper />}
+            />
             <Route
               path="/courses/:id/add-topic-exercise"
               element={<AddTopicExercisePageWrapper />}
@@ -154,6 +164,34 @@ const AddTopicExercisePageWrapper = () => {
     <AddTopicExercisePage
       courseId={id}
       course={course}
+      onCancel={() => navigate(`/courses/${id}/details`)}
+      onSuccess={() => navigate(`/courses/${id}/details`)}
+    />
+  );
+};
+
+const EditExercisePageWrapper = () => {
+  const navigate = useNavigate();
+  const { id, exerciseId } = useParams();
+  const [exercise, setExercise] = useState(null);
+
+  useEffect(() => {
+    const fetchExercise = async () => {
+      try {
+        const data = await courseApi.getExercise(exerciseId);
+        setExercise(data.result || data);
+      } catch (error) {
+        console.error("Failed to fetch exercise:", error);
+      }
+    };
+    fetchExercise();
+  }, [exerciseId]);
+
+  return (
+    <EditExercisePage
+      courseId={id}
+      exerciseId={exerciseId}
+      exercise={exercise}
       onCancel={() => navigate(`/courses/${id}/details`)}
       onSuccess={() => navigate(`/courses/${id}/details`)}
     />

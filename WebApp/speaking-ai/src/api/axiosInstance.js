@@ -29,14 +29,16 @@ axiosInstance.interceptors.response.use(
 export const courseApi = {
   getAll: () => axiosInstance.get("/courses"),
   getDetails: (id) => axiosInstance.get(`/courses/${id}/details`),
-  create: (courseData) => axiosInstance.post("/courses", courseData), // Handles FormData or JSON
+  create: (courseData) => axiosInstance.post("/courses", courseData),
   update: (id, courseData) => axiosInstance.put(`/courses/${id}`, courseData),
   delete: (id) => axiosInstance.delete(`/courses/${id}`),
   addTopic: (courseId, topicData) =>
     axiosInstance.post(`/courses/${courseId}/topic`, topicData),
   getTopic: (topicId) => axiosInstance.get(`/courses/topic/${topicId}`),
   updateTopic: (topicId, topicData) =>
-    axiosInstance.put(`/courses/topic/${topicId}`, topicData),
+    axiosInstance.put(`/courses/topic/${topicId}`, {
+      topicName: topicData.topicName,
+    }),
   deleteTopic: (topicId) => axiosInstance.delete(`/courses/topic/${topicId}`),
   addExercise: (topicId, exerciseData) =>
     axiosInstance.post(`/courses/topics/${topicId}/exercises`, exerciseData),
