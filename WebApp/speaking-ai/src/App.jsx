@@ -6,15 +6,15 @@ import {
   useParams,
 } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import LoginPage from "./pages/LoginPage";
-import SignUpPage from "./pages/SignUpPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import LoginPage from "./pages/auth/LoginPage";
+import SignUpPage from "./pages/auth/SignUpPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import AdminPage from "./pages/AdminPage";
 import DashboardHome from "./pages/DashboardHome";
 import CoursePage from "./pages/course/CoursePage";
 import CourseDetailPage from "./pages/course/CourseDetailPage";
 import CourseEditForm from "./components/course/CourseEditForm";
-import AddTopicExercisePage from "./pages/course/AddTopicExercisePage"; // New component
+import AddTopicExercisePage from "./pages/course/AddTopicExercisePage";
 import VoucherPage from "./pages/voucher/VoucherPage";
 import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
 import VoucherEditPage from "./pages/voucher/VoucherEditPage";
