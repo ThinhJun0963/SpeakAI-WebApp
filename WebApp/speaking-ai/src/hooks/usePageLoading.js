@@ -1,46 +1,76 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 
-export const usePageLoading = () => {
+export const usePageLoading = ({
+  delay = 300, // Default delay in ms
+  onLoadStart = () => {}, // Callback on load start
+  onLoadEnd = () => {}, // Callback on load end
+} = {}) => {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const prevPathnameRef = useRef("");
   const timeoutRef = useRef(null);
+  const isFetchingRef = useRef(false); // Track active fetches
 
-  useEffect(() => {
-    // Chỉ chạy khi pathname thay đổi
-    if (location.pathname !== prevPathnameRef.current) {
-      console.log("[usePageLoading] Location changed:", location.pathname);
+  // Handle page loading based on navigation and async operations
+  const startLoading = useCallback(() => {
+    if (!loading && !isFetchingRef.current) {
+      onLoadStart();
+      setLoading(true);
+    }
+  }, [loading, onLoadStart]);
 
-      // Xóa timeout cũ nếu có
+  const endLoading = useCallback(() => {
+    if (loading && !isFetchingRef.current) {
       if (timeoutRef.current) {
-        console.log("[usePageLoading] Clearing previous timeout");
         clearTimeout(timeoutRef.current);
       }
-
-      // Đặt loading và timer mới
-      setLoading(true);
       timeoutRef.current = setTimeout(() => {
-        console.log("[usePageLoading] Loading finished");
         setLoading(false);
+        onLoadEnd();
         timeoutRef.current = null;
-      }, 500);
+      }, delay);
+    }
+  }, [loading, delay, onLoadEnd]);
 
-      // Cập nhật prevPathnameRef
+  // Track pathname changes
+  useEffect(() => {
+    if (location.pathname !== prevPathnameRef.current) {
+      startLoading();
       prevPathnameRef.current = location.pathname;
     }
-  }, [location.pathname]);
+  }, [location.pathname, startLoading]);
 
-  // Cleanup khi component unmount
+  // Manage async operation tracking
+  const trackAsyncOperation = useCallback(
+    (promise) => {
+      isFetchingRef.current = true;
+      startLoading();
+      return promise.finally(() => {
+        isFetchingRef.current = false;
+        endLoading();
+      });
+    },
+    [startLoading, endLoading]
+  );
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
-        console.log("[usePageLoading] Cleaning up timeout on unmount");
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
     };
   }, []);
 
-  return loading;
+  return {
+    loading,
+    setLoading, // Allow manual control if needed
+    trackAsyncOperation, // Utility to track async operations
+    getLoaderConfig: () => ({
+      isLoading: loading,
+      delay,
+    }), // Provide config for loader rendering in JSX components
+  };
 };

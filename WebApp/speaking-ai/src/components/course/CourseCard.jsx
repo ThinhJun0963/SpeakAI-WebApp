@@ -1,79 +1,95 @@
-import React from "react";
+// CourseCard.jsx
+import React, { useState } from "react";
 import { Button, Card, Tag, Typography } from "antd";
-import { useCourseApi } from "./useCourseApi";
-import CourseEditForm from "./CourseEditForm";
+import { courseApi } from "../../../api/axiosInstance";
 
 const { Text } = Typography;
 
 const CourseCard = ({ course, onRefresh }) => {
-  const { deleteCourse } = useCourseApi();
-  const [editModalVisible, setEditModalVisible] = React.useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
 
   const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      await deleteCourse(course.id);
-      onRefresh();
+    if (
+      window.confirm(`Are you sure you want to delete "${course.courseName}"?`)
+    ) {
+      try {
+        await courseApi.delete(course.id);
+        onRefresh();
+      } catch (error) {
+        alert("Failed to delete course.");
+        console.error("Delete error:", error);
+      }
     }
   };
 
-  const levelMap = { 1: "Beginner", 2: "Intermediate", 3: "Advanced" };
+  const levelMap = {
+    1: "Beginner",
+    2: "Intermediate",
+    3: "Advanced",
+  };
 
   return (
-    <>
-      <Card
-        title={course.courseName}
-        hoverable
-        style={{ width: "100%" }}
-        extra={
-          <div>
-            {course.isFree && <Tag color="#52c41a">Free</Tag>}
-            {course.isPremium && <Tag color="#faad14">Premium</Tag>}
-          </div>
-        }
-      >
-        <Text className="text-gray-600 mb-4 block">{course.description}</Text>
+    <Card
+      hoverable
+      className="bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl border border-gray-100"
+      cover={
+        course.imageUrl && (
+          <img
+            alt={course.courseName}
+            src={course.imageUrl}
+            className="w-full h-48 object-cover"
+          />
+        )
+      }
+      actions={[
+        <Button
+          key="edit"
+          type="link"
+          onClick={() => setEditModalVisible(true)}
+          className="text-blue-600 hover:text-blue-800 font-medium"
+        >
+          Edit
+        </Button>,
+        <Button
+          key="delete"
+          onClick={handleDelete}
+          className="bg-red-600 text-white hover:bg-red-700 font-medium rounded-xl px-4 py-2 transition-all duration-300 shadow-md hover:shadow-lg"
+        >
+          Delete
+        </Button>,
+      ]}
+    >
+      <div className="p-4">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {course.courseName}
+        </h3>
+        <p className="text-gray-600 mb-4 line-clamp-2">{course.description}</p>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <Text className="text-gray-500">Level:</Text>
-            <Text>{levelMap[course.levelId] || course.levelId}</Text>
+            <Text className="text-gray-500">Level</Text>
+            <Text className="text-gray-800">
+              {levelMap[course.levelId] || course.levelId}
+            </Text>
           </div>
           <div className="flex justify-between">
-            <Text className="text-gray-500">Max Points:</Text>
-            <Text>{course.maxPoint}</Text>
+            <Text className="text-gray-500">Max Points</Text>
+            <Text className="text-gray-800">{course.maxPoint}</Text>
           </div>
           <div className="flex justify-between">
-            <Text className="text-gray-500">Status:</Text>
-            <Text>{course.isActive ? "Active" : "Inactive"}</Text>
+            <Text className="text-gray-500">Status</Text>
+            <Tag color={course.isActive ? "green" : "red"}>
+              {course.isActive ? "Active" : "Inactive"}
+            </Tag>
           </div>
           <div className="flex justify-between">
-            <Text className="text-gray-500">Locked:</Text>
-            <Text>{course.isLock ? "Yes" : "No"}</Text>
-          </div>
-          {course.topics && (
-            <div className="flex justify-between">
-              <Text className="text-gray-500">Topics:</Text>
-              <Text>{course.topics.length}</Text>
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end items-center mt-4 pt-4 border-t">
-          <div className="space-x-2">
-            <Button size="small" onClick={() => setEditModalVisible(true)}>
-              Edit
-            </Button>
-            <Button danger size="small" onClick={handleDelete}>
-              Delete
-            </Button>
+            <Text className="text-gray-500">Premium</Text>
+            <Tag color={course.isPremium ? "orange" : "green"}>
+              {course.isPremium ? "Yes" : "No"}
+            </Tag>
           </div>
         </div>
-      </Card>
-      <CourseEditForm
-        courseId={course.id}
-        visible={editModalVisible}
-        onCancel={() => setEditModalVisible(false)}
-        onSuccess={onRefresh}
-      />
-    </>
+      </div>
+    </Card>
   );
 };
 

@@ -1,53 +1,44 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { courseApi } from "../../api/axiosInstance";
-import { Table, Button, Input, Modal, Tag, Skeleton, Pagination } from "antd";
-import { Plus, Search, Edit, Trash, Eye } from "lucide-react";
+import {
+  Table,
+  Button,
+  Input,
+  Modal,
+  Tag,
+  Skeleton,
+  Pagination,
+  Tooltip,
+  Image,
+} from "antd";
+import { Plus, Search, Edit, Trash, Eye, Book, Dumbbell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import CourseEditForm from "./../../components/course/CourseEditForm";
-import debounce from "lodash/debounce"; // Thêm debounce
+import CreateCourseForm from "../../components/course/CreateCourseForm";
+import debounce from "lodash/debounce";
+import { usePageLoading } from "../../components/hooks/usePageLoading";
 
 const CoursePage = () => {
   const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editCourseId, setEditCourseId] = useState(null);
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
-  const isInitialFetch = useRef(true);
+  const { loading, trackAsyncOperation } = usePageLoading({});
 
-  const fetchCourses = useCallback(
-    async (forceFetch = false) => {
-      if (!forceFetch && !isInitialFetch.current) return;
-
-      setLoading(true);
-      try {
-        const data = await courseApi.getAll();
+  const fetchCourses = useCallback(async () => {
+    return trackAsyncOperation(
+      courseApi.getAll().then((data) => {
         const sortedData = Array.isArray(data)
-          ? data.sort((a, b) => {
-              const dateA = new Date(a.updatedAt || a.createdAt);
-              const dateB = new Date(b.updatedAt || b.createdAt);
-              return dateB - dateA;
-            })
+          ? data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
           : [];
         setCourses(sortedData);
-        isInitialFetch.current = false;
-      } catch (error) {
-        console.error("Failed to fetch courses:", error);
-        Modal.error({
-          title: "Error",
-          content: "Failed to load course list.",
-          onOk: () => navigate(-1),
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [navigate]
-  );
+      })
+    );
+  }, [trackAsyncOperation]);
 
   useEffect(() => {
-    if (isInitialFetch.current) fetchCourses();
+    fetchCourses();
   }, [fetchCourses]);
 
   const handleSearch = debounce((value) => {
@@ -59,37 +50,78 @@ const CoursePage = () => {
       title: "Are you sure?",
       content: `This action will delete the course "${courseName}". This cannot be undone.`,
       onOk: async () => {
-        setLoading(true);
-        try {
-          await courseApi.delete(id);
-          fetchCourses(true);
-          Modal.success({
-            title: "Success",
-            content: "Course deleted successfully.",
-          });
-        } catch (error) {
-          Modal.error({ title: "Error", content: "Failed to delete course." });
-        } finally {
-          setLoading(false);
-        }
+        await trackAsyncOperation(
+          courseApi.delete(id).then(() => {
+            fetchCourses();
+            Modal.success({
+              title: "Success",
+              content: "Course deleted successfully.",
+            });
+          })
+        );
       },
+      onCancel: () => {},
     });
   };
 
   const columns = [
-    { title: "Course Name", dataIndex: "courseName", key: "courseName" },
-    { title: "Description", dataIndex: "description", key: "description" },
-    { title: "Max Point", dataIndex: "maxPoint", key: "maxPoint" },
+    {
+      title: "Image",
+      dataIndex: "imageUrl",
+      key: "imageUrl",
+      width: 100,
+      render: (url) => (
+        <Image
+          src={url || "/placeholder-image.jpg"}
+          alt="Course Image"
+          width={80}
+          height={80}
+          className="rounded-lg object-cover"
+          fallback="/placeholder-image.jpg"
+        />
+      ),
+    },
+    {
+      title: "Course Name",
+      dataIndex: "courseName",
+      key: "courseName",
+      width: 150,
+      ellipsis: true,
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      width: 300,
+      render: (text) => (
+        <Tooltip title={text}>
+          <span className="line-clamp-2">
+            {text.length > 50 ? `${text.slice(0, 50)}...` : text}
+          </span>
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Max Point",
+      dataIndex: "maxPoint",
+      key: "maxPoint",
+      width: 100,
+      align: "center",
+    },
     {
       title: "Level",
       dataIndex: "levelId",
       key: "levelId",
+      width: 120,
+      align: "center",
       render: (id) =>
         ["", "Beginner", "Intermediate", "Advanced"][id] || "Undefined",
     },
     {
       title: "Status",
       key: "status",
+      width: 120,
+      align: "center",
       render: (_, record) => (
         <Tag color={record.isPremium ? "orange" : "green"}>
           {record.isPremium ? "Premium" : "Free"}
@@ -99,27 +131,45 @@ const CoursePage = () => {
     {
       title: "Actions",
       key: "actions",
+      width: 200,
+      align: "center",
       render: (_, record) => (
-        <div className="flex space-x-2">
-          <Button
-            icon={<Eye />}
-            onClick={() => navigate(`/courses/${record.id}/details`)}
-            className="border-none hover:bg-gray-100"
-            disabled={loading}
-          />
-          <Button
-            icon={<Edit />}
-            onClick={() => setEditCourseId(record.id)}
-            className="border-none hover:bg-gray-100"
-            disabled={loading}
-          />
-          <Button
-            icon={<Trash />}
-            danger
-            onClick={() => handleDelete(record.id, record.courseName)}
-            className="border-none hover:bg-red-100"
-            disabled={loading}
-          />
+        <div className="flex space-x-2 justify-center">
+          <Tooltip title="View Details">
+            <Button
+              icon={<Eye className="text-blue-600" />}
+              onClick={() => navigate(`/courses/${record.id}/details`)}
+              className="border-none hover:bg-blue-50 rounded-full p-2"
+              disabled={loading}
+            />
+          </Tooltip>
+          <Tooltip title="Edit Course">
+            <Button
+              icon={<Edit className="text-green-600" />}
+              onClick={() => navigate(`/courses/edit/${record.id}`)}
+              className="border-none hover:bg-green-50 rounded-full p-2"
+              disabled={loading}
+            />
+          </Tooltip>
+          <Tooltip title="Delete Course">
+            <Button
+              icon={<Trash className="text-red-600" />}
+              danger
+              onClick={() => handleDelete(record.id, record.courseName)}
+              className="border-none hover:bg-red-50 rounded-full p-2"
+              disabled={loading}
+            />
+          </Tooltip>
+          <Tooltip title="Add Topic/Exercise">
+            <Button
+              icon={<Book className="text-purple-600" />}
+              onClick={() =>
+                navigate(`/courses/${record.id}/add-topic-exercise`)
+              }
+              className="border-none hover:bg-purple-50 rounded-full p-2"
+              disabled={loading}
+            />
+          </Tooltip>
         </div>
       ),
     },
@@ -137,21 +187,22 @@ const CoursePage = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 sm:mb-0">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4 sm:mb-0">
           Course Management
         </h1>
         <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <Input
             placeholder="Search courses..."
-            prefix={<Search className="h-4 w-4 text-gray-400" />}
+            prefix={<Search className="h-5 w-5 text-gray-400" />}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full sm:w-64"
+            className="w-full sm:w-64 rounded-md border-gray-300 shadow-sm"
             disabled={loading}
           />
           <Button
             type="primary"
-            icon={<Plus />}
-            onClick={() => navigate("/courses/create")}
+            icon={<Plus className="mr-2" />}
+            onClick={() => setIsCreateModalVisible(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-md"
             disabled={loading}
           >
             Create Course
@@ -168,8 +219,9 @@ const CoursePage = () => {
             dataSource={paginatedCourses}
             rowKey="id"
             pagination={false}
-            scroll={{ x: "max-content" }}
-            className="mb-4"
+            scroll={{ x: 1000 }}
+            className="rounded-lg shadow-md overflow-hidden"
+            rowClassName="hover:bg-gray-50 transition-colors duration-200"
           />
           <Pagination
             current={currentPage}
@@ -180,25 +232,43 @@ const CoursePage = () => {
               setPageSize(size);
             }}
             showSizeChanger
-            pageSizeOptions={["10", "20", "50"]}
-            className="text-center"
+            pageSizeOptions={["5", "10", "15", "20"]}
+            showQuickJumper
+            showTotal={(total, range) =>
+              `${range[0]}-${range[1]} of ${total} courses`
+            }
+            itemRender={(current, type, originalElement) => {
+              if (type === "prev") {
+                return (
+                  <Button className="mr-2 bg-gray-200 hover:bg-gray-300 rounded-full">
+                    Previous
+                  </Button>
+                );
+              }
+              if (type === "next") {
+                return (
+                  <Button className="ml-2 bg-gray-200 hover:bg-gray-300 rounded-full">
+                    Next
+                  </Button>
+                );
+              }
+              if (type === "jump-prev" || type === "jump-next") {
+                return <span className="px-2 text-gray-500">...</span>;
+              }
+              return originalElement;
+            }}
+            className="flex justify-center items-center mt-6 space-x-2"
           />
         </>
       ) : (
         <div className="text-center py-10 text-gray-500">No courses found.</div>
       )}
 
-      {editCourseId && (
-        <CourseEditForm
-          courseId={editCourseId}
-          visible={!!editCourseId}
-          onCancel={() => setEditCourseId(null)}
-          onSuccess={() => {
-            setEditCourseId(null);
-            fetchCourses(true);
-          }}
-        />
-      )}
+      <CreateCourseForm
+        visible={isCreateModalVisible}
+        onClose={() => setIsCreateModalVisible(false)}
+        onSuccess={fetchCourses}
+      />
     </div>
   );
 };

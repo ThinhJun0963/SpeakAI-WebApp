@@ -1,3 +1,4 @@
+// ForgotPasswordPage.jsx
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -141,6 +142,7 @@ const ForgotPasswordPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
             <LoadingButton
               loading={loading}
@@ -177,37 +179,35 @@ const ForgotPasswordPage = () => {
         className="rounded-xl"
         transitionName="modal"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <p className="mb-4 text-gray-700">
-            An OTP has been sent to your email. Please enter it below along with
-            your new password:
-          </p>
-          <Input
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            placeholder="Enter OTP"
-            maxLength={6}
-            className="w-full mb-4"
-          />
-          <Input.Password
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="New Password"
-            className="w-full mb-4"
-            prefix={<Lock className="h-5 w-5 text-gray-400" />}
-          />
-          <Input.Password
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm New Password"
-            className="w-full mb-4"
-            prefix={<Lock className="h-5 w-5 text-gray-400" />}
-          />
-        </motion.div>
+        <p>
+          An OTP has been sent to your email. Please enter it below along with
+          your new password:
+        </p>
+        <Input
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          placeholder="Enter OTP"
+          maxLength={6}
+          style={{ marginTop: 16 }}
+          className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
+        />
+        <Input.Password
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="New Password"
+          style={{ marginTop: 16 }}
+          prefix={<Lock className="h-5 w-5 text-gray-400" />}
+          className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
+        />
+        <Input.Password
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm New Password"
+          style={{ marginTop: 16 }}
+          prefix={<Lock className="h-5 w-5 text-gray-400" />}
+          className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
+        />
+
       </Modal>
     </div>
   );

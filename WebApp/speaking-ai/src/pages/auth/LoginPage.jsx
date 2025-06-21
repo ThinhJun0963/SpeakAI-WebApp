@@ -1,3 +1,4 @@
+// LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -110,17 +111,71 @@ const LoginPage = () => {
             )}
           </AnimatePresence>
 
-          <LoginForm
-            formData={formData}
-            loading={loadingNormal}
-            error={error}
-            showPassword={showPassword}
-            onSubmit={handleSubmit}
-            onChange={handleChange}
-            onTogglePassword={() => setShowPassword(!showPassword)}
-            onGoogleLogin={handleGoogleSuccess}
-            loadingGoogle={loadingGoogle}
-          />
+          <form onSubmit={handleSubmit} className="space-y-3 mt-6">
+            <InputField
+              id="username"
+              name="username"
+              type="text"
+              icon={User}
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Username"
+              required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
+            />
+            <div>
+              <InputField
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                icon={Lock}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                required
+                className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
+                endIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                }
+              />
+              <p className="mt-2 text-right text-sm text-gray-600">
+                <a
+                  href="/forgot-password"
+                  className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  Forgot your password?
+                </a>
+              </p>
+            </div>
+            <LoadingButton
+              loading={loadingNormal}
+              text="Log In"
+              loadingText="Logging in..."
+            />
+          </form>
+
+          <div className="mt-4 space-y-4">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              size="large"
+              theme="outline"
+              text="signin_with"
+              shape="pill"
+              disabled={loadingGoogle}
+            />
+          </div>
+
 
           <p className="mt-6 text-center text-sm text-gray-600">
             Don’t have an account?{" "}

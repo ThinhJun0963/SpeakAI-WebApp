@@ -10,7 +10,7 @@ const useApi = (initialData = null) => {
     setError(null);
     try {
       const response = await apiCall(...args);
-      console.log("Raw response in useApi:", response); // Thêm log để debug
+      console.log("Raw response in useApi:", response);
       const result =
         response && response.data !== undefined
           ? response.data
