@@ -1,3 +1,4 @@
+// ForgotPasswordPage.jsx
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -54,7 +55,6 @@ const ForgotPasswordPage = () => {
     setLoading(true);
     setError(null);
 
-    // Kiểm tra password
     const passwordError = validatePassword(newPassword);
     if (passwordError) {
       setError(passwordError);
@@ -131,6 +131,7 @@ const ForgotPasswordPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
 
             <LoadingButton
@@ -175,6 +176,7 @@ const ForgotPasswordPage = () => {
           placeholder="Enter OTP"
           maxLength={6}
           style={{ marginTop: 16 }}
+          className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
         />
         <Input.Password
           value={newPassword}
@@ -182,6 +184,7 @@ const ForgotPasswordPage = () => {
           placeholder="New Password"
           style={{ marginTop: 16 }}
           prefix={<Lock className="h-5 w-5 text-gray-400" />}
+          className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
         />
         <Input.Password
           value={confirmPassword}
@@ -189,6 +192,7 @@ const ForgotPasswordPage = () => {
           placeholder="Confirm New Password"
           style={{ marginTop: 16 }}
           prefix={<Lock className="h-5 w-5 text-gray-400" />}
+          className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
         />
       </Modal>
     </div>

@@ -1,3 +1,4 @@
+// LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -103,6 +104,7 @@ const LoginPage = () => {
               onChange={handleChange}
               placeholder="Username"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
             <div>
               <InputField
@@ -114,6 +116,7 @@ const LoginPage = () => {
                 onChange={handleChange}
                 placeholder="Password"
                 required
+                className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
                 endIcon={
                   <button
                     type="button"

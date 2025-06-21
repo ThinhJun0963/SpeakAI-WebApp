@@ -1,3 +1,4 @@
+// SignUpPage.jsx
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -34,7 +35,6 @@ const SignUpPage = () => {
     setLoading(true);
     setError(null);
 
-    // Kiểm tra password
     const passwordError = validatePassword(formData.password);
     if (passwordError) {
       setError(passwordError);
@@ -101,6 +101,7 @@ const SignUpPage = () => {
               onChange={handleChange}
               placeholder="Username"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
             <InputField
               id="email"
@@ -111,6 +112,7 @@ const SignUpPage = () => {
               onChange={handleChange}
               placeholder="Email"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
             <InputField
               id="fullName"
@@ -121,6 +123,7 @@ const SignUpPage = () => {
               onChange={handleChange}
               placeholder="Full Name"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
             <InputField
               id="password"
@@ -131,6 +134,7 @@ const SignUpPage = () => {
               onChange={handleChange}
               placeholder="Password"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
             <InputField
               id="confirmedPassword"
@@ -141,6 +145,7 @@ const SignUpPage = () => {
               onChange={handleChange}
               placeholder="Confirm Password"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
             <InputField
               id="birthday"
@@ -151,12 +156,13 @@ const SignUpPage = () => {
               onChange={handleChange}
               placeholder="Birthday"
               required
+              className="bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
             />
             <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
+              className="w-full p-2 border rounded-lg bg-white text-gray-900 border-gray-300 focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="">Select Gender</option>

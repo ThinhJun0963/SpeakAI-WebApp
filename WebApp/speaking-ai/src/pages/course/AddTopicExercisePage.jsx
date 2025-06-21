@@ -1,4 +1,3 @@
-// AddTopicExercisePage.jsx
 import React, { useState, useEffect } from "react";
 import {
   useParams,
@@ -124,11 +123,11 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
             }}
             disabled={!topicId}
           >
-            <Book className="mr-2" /> Add Exercise{" "}
+            <Book className="mr-2" /> Add Exercise
           </Button>
         </div>
         <Form
-          form={activeTab === "topic" ? topicForm : exerciseForm}
+          form={activeTab === "topic" ? topicForm : exerciseForm} // Kết nối instance của form
           layout="vertical"
           onFinish={handleFinish}
           className="space-y-6"
@@ -148,9 +147,6 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                   placeholder="e.g., Introduction to Grammar"
                   className="rounded-xl border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Enter a unique name for the topic.
-                </p>
               </Form.Item>
               <Form.Item
                 name="description"
@@ -168,9 +164,6 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                   placeholder="e.g., Covers basic grammar rules and exercises"
                   className="rounded-xl border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Provide a brief description of the topic.
-                </p>
               </Form.Item>
             </>
           ) : (
@@ -190,9 +183,6 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                   placeholder="e.g., Answer the following question"
                   className="rounded-xl border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Enter the main content or instruction for the exercise.
-                </p>
               </Form.Item>
               <Form.Item
                 name="typeId"
@@ -213,9 +203,6 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                   <Option value={2}>Fill in Blank</Option>
                   <Option value={3}>True/False Question</Option>
                 </Select>
-                <p className="text-sm text-gray-500 mt-1">
-                  Choose the type of question for this exercise.
-                </p>
               </Form.Item>
               <Form.Item
                 name="questionContent"
@@ -232,9 +219,6 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                   placeholder="e.g., Is this statement true?"
                   className="rounded-xl border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Enter the specific question text.
-                </p>
               </Form.Item>
               <Form.Item
                 label={
@@ -248,7 +232,7 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                   initialValue={[{ answerContent: "", isCorrect: "false" }]}
                 >
                   {(fields, { add, remove }) => (
-                    <>
+                    <div>
                       {fields.map((field) => (
                         <Space
                           key={field.key}
@@ -302,12 +286,9 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                       >
                         Add Answer
                       </Button>
-                    </>
+                    </div>
                   )}
                 </Form.List>
-                <p className="text-sm text-gray-500 mt-1">
-                  Add possible answers for the question.
-                </p>
               </Form.Item>
             </>
           )}
