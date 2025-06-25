@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { courseApi } from "../../api/axiosInstance";
-import { Button, Form, Input, message, Tooltip } from "antd";
-import Select from "react-select";
+import { Button, Form, Input, message, Tooltip, Select } from "antd";
 import { Edit, Info } from "lucide-react";
 import { EXERCISE_TYPE_OPTIONS } from "../../constants/courseOptions"; // Import từ constants.js
+
+const { Option } = Select;
 
 const EditExercisePage = ({
   courseId,
@@ -20,9 +21,7 @@ const EditExercisePage = ({
     if (exercise) {
       form.setFieldsValue({
         content: exercise.content,
-        typeId: EXERCISE_TYPE_OPTIONS.find(
-          (option) => option.value === exercise.typeId
-        ),
+        typeId: exercise.typeId, // Gán trực tiếp giá trị typeId (số nguyên)
       });
     }
   }, [exercise, form]);
@@ -31,7 +30,7 @@ const EditExercisePage = ({
     try {
       const exerciseData = {
         content: values.content,
-        typeId: Number(values.typeId.value),
+        typeId: Number(values.typeId), // Chuyển đổi typeId thành số nguyên
         questions: exercise.questions, // Giữ nguyên mảng questions từ dữ liệu ban đầu
       };
       await courseApi.updateExercise(exerciseId, exerciseData);
@@ -47,29 +46,6 @@ const EditExercisePage = ({
   const handleBack = () => {
     if (onCancel) onCancel();
     navigate(`/courses/${courseId}/details`);
-  };
-
-  const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      borderRadius: "0.5rem",
-      borderColor: "#d1d5db",
-      padding: "0.25rem",
-      fontSize: "1.125rem",
-      "&:hover": { borderColor: "#3b82f6" },
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      fontSize: "1rem",
-      backgroundColor: state.isSelected ? "#3b82f6" : "white",
-      color: state.isSelected ? "white" : "#374151",
-      "&:hover": { backgroundColor: "#e0f2fe" },
-    }),
-    menu: (provided) => ({
-      ...provided,
-      borderRadius: "0.5rem",
-      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    }),
   };
 
   return (
@@ -116,7 +92,7 @@ const EditExercisePage = ({
             label={
               <span className="text-lg font-medium text-gray-800 flex items-center">
                 Question Type{" "}
-                <Tooltip title="Select the type of question">
+                <Tooltip title="Select the type of question (1: Multiple Choice, 2: Fill in Blank, 3: True/False)">
                   <Info className="ml-2 text-gray-400 cursor-help" size={16} />
                 </Tooltip>
               </span>
@@ -124,12 +100,15 @@ const EditExercisePage = ({
             rules={[{ required: true, message: "Please select question type" }]}
           >
             <Select
-              options={EXERCISE_TYPE_OPTIONS}
-              onChange={(option) => form.setFieldsValue({ typeId: option })}
-              styles={customStyles}
               placeholder="Select question type"
-              className="w-full text-lg"
-            />
+              className="w-full text-lg rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            >
+              {EXERCISE_TYPE_OPTIONS.map((option) => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
           <div className="flex justify-end space-x-4">
             <Button

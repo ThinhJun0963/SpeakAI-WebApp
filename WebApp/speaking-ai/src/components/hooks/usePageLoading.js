@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 
 export const usePageLoading = ({
-  delay = 300, // Default delay in ms
+  delay = 100, // Default delay in ms
   onLoadStart = () => {}, // Callback on load start
   onLoadEnd = () => {}, // Callback on load end
 } = {}) => {

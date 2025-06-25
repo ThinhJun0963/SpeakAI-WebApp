@@ -4,7 +4,6 @@ import { courseApi } from "../../api/axiosInstance";
 import { Button, Modal, Tag, Skeleton, Table, message, Image } from "antd";
 import { Edit, Trash, Plus, Eye } from "lucide-react";
 import { usePageLoading } from "../../components/hooks/usePageLoading";
-import { EXERCISE_TYPE_OPTIONS } from "../../constants/courseOptions";
 
 const CourseDetailPage = () => {
   const { id } = useParams();
@@ -164,7 +163,7 @@ const CourseDetailPage = () => {
       title: "Content",
       dataIndex: "content",
       key: "content",
-      ellipsis: true,
+      // Xóa ellipsis để hiển thị đầy đủ nội dung
       className: "text-gray-800",
     },
     {
@@ -175,10 +174,23 @@ const CourseDetailPage = () => {
       className: "text-gray-700",
     },
     {
-      title: "Number of Questions",
+      title: "Question Content",
       dataIndex: "questions",
-      key: "numQuestions",
-      render: (questions) => (questions ? questions.length : 0),
+      key: "questionContent",
+      render: (questions) => questions?.[0]?.content || "N/A",
+      className: "text-gray-700",
+    },
+    {
+      title: "Answers",
+      dataIndex: "questions",
+      key: "answers",
+      render: (questions) =>
+        questions
+          ?.flatMap((q) => q.answers)
+          ?.map(
+            (a) => `${a.content} (${a.isCorrect ? "Correct" : "Incorrect"})`
+          )
+          ?.join(", ") || "N/A",
       className: "text-gray-700",
     },
     {
