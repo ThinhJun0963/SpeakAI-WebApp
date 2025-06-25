@@ -6,7 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { courseApi } from "../../api/axiosInstance";
-import { Button, Form, Input, Select, message, Space, Tooltip } from "antd";
+import { Button, Form, Input, message, Select, Tooltip } from "antd";
 import { Plus, Book, Info } from "lucide-react";
 
 const { Option } = Select;
@@ -30,6 +30,7 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
 
   const handleFinish = async (values) => {
     try {
+      console.log("Form values:", values);
       if (activeTab === "topic") {
         const topicData = {
           topicName: values.topicName,
@@ -40,20 +41,37 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
         topicForm.resetFields();
         if (onSuccess) onSuccess();
       } else if (topicId) {
+        const content = values.content;
+        if (!content) {
+          message.error("Please enter exercise content.");
+          return;
+        }
+
+        const typeId = Number(values.typeId);
+        if (!typeId || ![1, 2, 3].includes(typeId)) {
+          message.error("Please select a valid question type.");
+          return;
+        }
+
+        const questions = values.questions || [];
+        if (questions.length === 0) {
+          message.error("Please add at least one question.");
+          return;
+        }
+
         const exerciseData = {
-          content: values.content,
-          maxPoint: values.maxPoint || 10,
-          typeId: Number(values.typeId),
-          questions: [
-            {
-              content: values.questionContent,
-              answers: values.answers.map((a) => ({
-                content: a.answerContent,
-                isCorrect: a.isCorrect === "true",
-              })),
-            },
-          ],
+          content: content,
+          typeId: typeId,
+          questions: questions.map((q) => ({
+            content: q.questionContent,
+            answers: q.answers.map((a) => ({
+              content: a.answerContent,
+              isCorrect: a.isCorrect === "true",
+            })),
+          })),
         };
+
+        console.log("Exercise data sent:", exerciseData);
         await courseApi.addExercise(topicId, exerciseData);
         message.success("Exercise added successfully.");
         exerciseForm.resetFields();
@@ -66,10 +84,9 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
         return;
       }
     } catch (error) {
+      console.error("Error details:", error);
       message.error(
-        `Failed to add ${activeTab}. ${
-          error.message || "Please check required fields."
-        }`
+        `Failed to add ${activeTab}. ${error.message || "Please try again."}`
       );
     }
   };
@@ -214,28 +231,7 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                 ]}
               >
                 <Input
-                  placeholder="e.g., Answer the following question"
-                  className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </Form.Item>
-              <Form.Item
-                name="maxPoint"
-                label={
-                  <span className="text-lg font-medium text-gray-800 flex items-center">
-                    Max Point{" "}
-                    <Tooltip title="Enter the maximum points for this exercise">
-                      <Info
-                        className="ml-2 text-gray-400 cursor-help"
-                        size={16}
-                      />
-                    </Tooltip>
-                  </span>
-                }
-                rules={[{ required: true, message: "Please enter max point" }]}
-              >
-                <Input
-                  type="number"
-                  placeholder="e.g., 10"
+                  placeholder="e.g., Ex2"
                   className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
               </Form.Item>
@@ -255,123 +251,150 @@ const AddTopicExercisePage = ({ courseId, course, onCancel, onSuccess }) => {
                 rules={[
                   { required: true, message: "Please select question type" },
                 ]}
-                initialValue={1}
               >
                 <Select
                   placeholder="Select question type"
-                  className="w-full rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                  getPopupContainer={(trigger) => trigger.parentNode}
+                  className="w-full text-lg rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 >
                   <Option value={1}>Multiple Choice</Option>
                   <Option value={2}>Fill in Blank</Option>
                   <Option value={3}>True/False</Option>
                 </Select>
               </Form.Item>
-              <Form.Item
-                name="questionContent"
-                label={
-                  <span className="text-lg font-medium text-gray-800 flex items-center">
-                    Question Content{" "}
-                    <Tooltip title="Enter the specific question text">
-                      <Info
-                        className="ml-2 text-gray-400 cursor-help"
-                        size={16}
-                      />
-                    </Tooltip>
-                  </span>
-                }
-                rules={[
-                  { required: true, message: "Please enter question content" },
+              <Form.List
+                name="questions"
+                initialValue={[
+                  {
+                    questionContent: "",
+                    answers: [{ answerContent: "", isCorrect: "false" }],
+                  },
                 ]}
               >
-                <Input
-                  placeholder="e.g., Is this statement true?"
-                  className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </Form.Item>
-              <Form.Item
-                label={
-                  <span className="text-lg font-medium text-gray-800 flex items-center">
-                    Answers{" "}
-                    <Tooltip title="Add possible answers for the question">
-                      <Info
-                        className="ml-2 text-gray-400 cursor-help"
-                        size={16}
-                      />
-                    </Tooltip>
-                  </span>
-                }
-              >
-                <Form.List
-                  name="answers"
-                  initialValue={[{ answerContent: "", isCorrect: "false" }]}
-                >
-                  {(fields, { add, remove }) => (
-                    <>
-                      {fields.map((field) => (
-                        <Space
-                          key={field.key.toString()}
-                          className="flex items-center mb-4"
-                          align="baseline"
-                        >
-                          <Form.Item
-                            {...field}
-                            name={[field.name, "answerContent"]}
-                            rules={[
-                              {
-                                required: true,
-                                message: "Please enter answer content",
-                              },
-                            ]}
-                          >
-                            <Input
-                              placeholder="e.g., Yes"
-                              className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                            />
-                          </Form.Item>
-                          <Form.Item
-                            {...field}
-                            name={[field.name, "isCorrect"]}
-                            rules={[
-                              {
-                                required: true,
-                                message: "Please select if correct",
-                              },
-                            ]}
-                          >
-                            <Select
-                              className="w-40 rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                              getPopupContainer={(trigger) =>
-                                trigger.parentNode
-                              }
-                            >
-                              <Option value="true">Correct</Option>
-                              <Option value="false">Incorrect</Option>
-                            </Select>
-                          </Form.Item>
-                          {fields.length > 1 && (
-                            <Button
-                              onClick={() => remove(field.name)}
-                              className="bg-red-500 text-white rounded-lg px-4 py-2 hover:bg-red-600 transition-all duration-300 shadow-md hover:shadow-lg"
-                            >
-                              Remove
-                            </Button>
-                          )}
-                        </Space>
-                      ))}
-                      <Button
-                        type="dashed"
-                        onClick={() =>
-                          add({ answerContent: "", isCorrect: "false" })
-                        }
-                        className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg px-5 py-2.5 hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-md hover:shadow-lg"
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map((field) => (
+                      <div
+                        key={field.name}
+                        className="mb-6 p-4 border border-gray-200 rounded-lg shadow-sm"
                       >
-                        Add Answer
-                      </Button>
-                    </>
-                  )}
-                </Form.List>
-              </Form.Item>
+                        <Form.Item
+                          label={
+                            <span className="text-lg font-medium text-gray-800">
+                              Question Content
+                            </span>
+                          }
+                          {...field}
+                          name={[field.name, "questionContent"]}
+                          rules={[
+                            {
+                              required: true,
+                              message: "Please enter question content",
+                            },
+                          ]}
+                        >
+                          <Input
+                            placeholder="e.g., How are ____ ?"
+                            className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                          />
+                        </Form.Item>
+                        <Form.List name={[field.name, "answers"]}>
+                          {(
+                            answerFields,
+                            { add: addAnswer, remove: removeAnswer }
+                          ) => (
+                            <>
+                              {answerFields.map((answerField) => (
+                                <div
+                                  key={answerField.name}
+                                  className="flex items-center mb-4"
+                                >
+                                  <Form.Item
+                                    {...answerField}
+                                    name={[answerField.name, "answerContent"]}
+                                    rules={[
+                                      {
+                                        required: true,
+                                        message: "Please enter answer content",
+                                      },
+                                    ]}
+                                    style={{ flex: 1, marginRight: "8px" }}
+                                  >
+                                    <Input
+                                      placeholder="e.g., you"
+                                      className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                  </Form.Item>
+                                  <Form.Item
+                                    {...answerField}
+                                    name={[answerField.name, "isCorrect"]}
+                                    rules={[
+                                      {
+                                        required: true,
+                                        message: "Please select if correct",
+                                      },
+                                    ]}
+                                    style={{ width: "150px" }}
+                                  >
+                                    <Select
+                                      placeholder="Select"
+                                      className="text-lg rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                    >
+                                      <Option value="true">Correct</Option>
+                                      <Option value="false">Incorrect</Option>
+                                    </Select>
+                                  </Form.Item>
+                                  {answerFields.length > 1 && (
+                                    <Button
+                                      onClick={() =>
+                                        removeAnswer(answerField.name)
+                                      }
+                                      className="bg-red-500 text-white rounded-lg px-4 py-2 hover:bg-red-600 ml-2"
+                                    >
+                                      Remove
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                              <Button
+                                type="dashed"
+                                onClick={() =>
+                                  addAnswer({
+                                    answerContent: "",
+                                    isCorrect: "false",
+                                  })
+                                }
+                                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg px-5 py-2.5 hover:from-purple-600 hover:to-blue-600 mt-2"
+                              >
+                                Add Answer
+                              </Button>
+                            </>
+                          )}
+                        </Form.List>
+                        {fields.length > 1 && (
+                          <Button
+                            onClick={() => remove(field.name)}
+                            className="bg-red-500 text-white rounded-lg px-4 py-2 hover:bg-red-600 mt-2"
+                          >
+                            Remove Question
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="dashed"
+                      onClick={() =>
+                        add({
+                          questionContent: "",
+                          answers: [{ answerContent: "", isCorrect: "false" }],
+                        })
+                      }
+                      className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg px-5 py-2.5 hover:from-purple-600 hover:to-blue-600 mt-4"
+                    >
+                      Add Question
+                    </Button>
+                  </>
+                )}
+              </Form.List>
             </>
           )}
           <div className="flex justify-end space-x-4">

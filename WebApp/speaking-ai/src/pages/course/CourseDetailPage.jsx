@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { courseApi } from "../../api/axiosInstance";
 import { Button, Modal, Tag, Skeleton, Table, message, Image } from "antd";
 import { Edit, Trash, Plus, Eye } from "lucide-react";
 import { usePageLoading } from "../../components/hooks/usePageLoading";
+import { EXERCISE_TYPE_OPTIONS } from "../../constants/courseOptions";
 
 const CourseDetailPage = () => {
   const { id } = useParams();
@@ -11,13 +12,14 @@ const CourseDetailPage = () => {
   const { loading, trackAsyncOperation } = usePageLoading({ delay: 400 });
   const [course, setCourse] = useState(null);
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+  const context = useOutletContext();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await trackAsyncOperation(courseApi.getDetails(id));
-        console.log("API Response in CourseDetailPage:", response);
-        setCourse(response.result || response);
+        const courseData = response?.result || response;
+        setCourse(courseData);
       } catch (error) {
         console.error("Failed to fetch course details:", error);
         message.error(
@@ -38,6 +40,7 @@ const CourseDetailPage = () => {
           courseApi.delete(id).then(() => {
             navigate("/courses");
             message.success("Course deleted successfully.");
+            if (context?.onCourseDeleted) context.onCourseDeleted();
           })
         );
       },
@@ -165,13 +168,6 @@ const CourseDetailPage = () => {
       className: "text-gray-800",
     },
     {
-      title: "Question Content",
-      dataIndex: ["questions", 0, "content"],
-      key: "questionContent",
-      ellipsis: true,
-      className: "text-gray-700",
-    },
-    {
       title: "Max Point",
       dataIndex: "maxPoint",
       key: "maxPoint",
@@ -179,20 +175,10 @@ const CourseDetailPage = () => {
       className: "text-gray-700",
     },
     {
-      title: "Type",
-      dataIndex: "typeId",
-      key: "typeId",
-      render: (typeId) =>
-        ["Multiple Choice", "Fill in Blank", "True/False"][typeId - 1] ||
-        "Unknown",
-      className: "text-gray-700",
-    },
-    {
-      title: "Answers",
-      dataIndex: ["questions", 0, "answers"],
-      key: "answers",
-      render: (answers) =>
-        answers ? `${answers.length} answers` : "No answers",
+      title: "Number of Questions",
+      dataIndex: "questions",
+      key: "numQuestions",
+      render: (questions) => (questions ? questions.length : 0),
       className: "text-gray-700",
     },
     {
@@ -242,7 +228,7 @@ const CourseDetailPage = () => {
         dataSource={record.exercises || []}
         rowKey="id"
         pagination={false}
-        className="custom-table rounded-lg overflow-hidden"
+        className="custom-table rounded-2xl overflow-hidden"
         rowClassName="hover:bg-indigo-50 transition-colors duration-300"
       />
     </div>
@@ -257,7 +243,7 @@ const CourseDetailPage = () => {
     );
   }
 
-  if (!course) {
+  if (!course || !course.id) {
     return (
       <div className="text-center py-12 text-gray-500">
         Course not found. Please check the course ID or contact support. (ID:{" "}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { courseApi } from "../../api/axiosInstance";
-import { Button, Form, Input, message, Tooltip } from "antd";
+import { Button, Form, Input, Switch, message, Tooltip } from "antd";
 import { Info } from "lucide-react";
 
 const EditTopicPage = () => {
@@ -17,6 +17,7 @@ const EditTopicPage = () => {
         const topic = await courseApi.getTopic(topicId);
         form.setFieldsValue({
           topicName: topic.topicName,
+          isEnabled: topic.isActive || true, // Thay isActive bằng isEnabled
         });
       } catch (error) {
         message.error("Failed to load topic details.");
@@ -30,7 +31,10 @@ const EditTopicPage = () => {
   const handleFinish = async (values) => {
     try {
       setLoading(true);
-      await courseApi.updateTopic(topicId, values);
+      await courseApi.updateTopic(topicId, {
+        topicName: values.topicName,
+        isActive: values.isEnabled, // Thay isActive bằng isEnabled
+      });
       message.success("Topic updated successfully.");
       navigate(`/courses/${id}/details`);
     } catch (error) {
@@ -80,6 +84,20 @@ const EditTopicPage = () => {
               placeholder="e.g., Introduction to Grammar"
               className="rounded-xl border-gray-300 p-3 text-lg text-gray-900 focus:border-indigo-500 focus:ring-indigo-500"
             />
+          </Form.Item>
+          <Form.Item
+            name="isEnabled" // Thay isActive bằng isEnabled
+            label={
+              <span className="text-lg font-medium text-indigo-900 flex items-center">
+                Enabled{" "}
+                <Tooltip title="Enable or disable this topic">
+                  <Info className="ml-2 text-gray-400 cursor-help" size={16} />
+                </Tooltip>
+              </span>
+            }
+            valuePropName="checked"
+          >
+            <Switch />
           </Form.Item>
           <div className="flex justify-end space-x-4">
             <Button

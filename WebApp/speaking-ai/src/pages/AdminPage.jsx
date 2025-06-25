@@ -18,27 +18,30 @@ const AdminPage = () => {
   const [vouchers, setVouchers] = useState([]);
   const [error, setError] = useState(null);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [coursesResponse, vouchersResponse] = await Promise.all([
+        courseApi.getAll(),
+        voucherApi.getAll(),
+      ]);
+      setCourses(coursesResponse?.result || coursesResponse || []);
+      setVouchers(vouchersResponse?.result || vouchersResponse || []);
+    } catch (err) {
+      setError("Failed to load data: " + err.message);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [coursesResponse, vouchersResponse] = await Promise.all([
-          courseApi.getAll(),
-          voucherApi.getAll(),
-        ]);
-
-        setCourses(coursesResponse?.result || coursesResponse || []);
-        setVouchers(vouchersResponse?.result || vouchersResponse || []);
-      } catch (err) {
-        setError("Failed to load data: " + err.message);
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
+
+  const handleCourseDeleted = () => {
+    fetchData(); // Refetch dữ liệu courses sau khi xóa
+  };
 
   if (error) {
     return (
@@ -86,7 +89,14 @@ const AdminPage = () => {
           transition={{ duration: 0.5 }}
           className="pt-16 p-6 min-h-screen overflow-auto"
         >
-          <MemoizedOutlet context={{ loading, courses, vouchers }} />
+          <MemoizedOutlet
+            context={{
+              loading,
+              courses,
+              vouchers,
+              onCourseDeleted: handleCourseDeleted,
+            }}
+          />
         </motion.main>
       </div>
     </div>

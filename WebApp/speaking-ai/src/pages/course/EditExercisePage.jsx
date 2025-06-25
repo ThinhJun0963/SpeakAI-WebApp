@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { courseApi } from "../../api/axiosInstance";
-import { Button, Form, Input, Select, message, Space, Tooltip } from "antd";
+import { Button, Form, Input, message, Tooltip } from "antd";
+import Select from "react-select";
 import { Edit, Info } from "lucide-react";
-
-const { Option } = Select;
+import { EXERCISE_TYPE_OPTIONS } from "../../constants/courseOptions"; // Import từ constants.js
 
 const EditExercisePage = ({
   courseId,
@@ -20,13 +20,9 @@ const EditExercisePage = ({
     if (exercise) {
       form.setFieldsValue({
         content: exercise.content,
-        maxPoint: exercise.maxPoint,
-        typeId: exercise.typeId,
-        questionContent: exercise.questions?.[0]?.content || "",
-        answers: exercise.questions?.[0]?.answers.map((a) => ({
-          answerContent: a.content,
-          isCorrect: a.isCorrect.toString(),
-        })) || [{ answerContent: "", isCorrect: "false" }],
+        typeId: EXERCISE_TYPE_OPTIONS.find(
+          (option) => option.value === exercise.typeId
+        ),
       });
     }
   }, [exercise, form]);
@@ -35,17 +31,8 @@ const EditExercisePage = ({
     try {
       const exerciseData = {
         content: values.content,
-        maxPoint: values.maxPoint || 10,
-        typeId: Number(values.typeId),
-        questions: [
-          {
-            content: values.questionContent,
-            answers: values.answers.map((a) => ({
-              content: a.answerContent,
-              isCorrect: a.isCorrect === "true",
-            })),
-          },
-        ],
+        typeId: Number(values.typeId.value),
+        questions: exercise.questions, // Giữ nguyên mảng questions từ dữ liệu ban đầu
       };
       await courseApi.updateExercise(exerciseId, exerciseData);
       message.success("Exercise updated successfully.");
@@ -60,6 +47,29 @@ const EditExercisePage = ({
   const handleBack = () => {
     if (onCancel) onCancel();
     navigate(`/courses/${courseId}/details`);
+  };
+
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      borderRadius: "0.5rem",
+      borderColor: "#d1d5db",
+      padding: "0.25rem",
+      fontSize: "1.125rem",
+      "&:hover": { borderColor: "#3b82f6" },
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      fontSize: "1rem",
+      backgroundColor: state.isSelected ? "#3b82f6" : "white",
+      color: state.isSelected ? "white" : "#374151",
+      "&:hover": { backgroundColor: "#e0f2fe" },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.5rem",
+      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    }),
   };
 
   return (
@@ -102,29 +112,11 @@ const EditExercisePage = ({
             />
           </Form.Item>
           <Form.Item
-            name="maxPoint"
-            label={
-              <span className="text-lg font-medium text-gray-800 flex items-center">
-                Max Point{" "}
-                <Tooltip title="Enter the maximum points for this exercise">
-                  <Info className="ml-2 text-gray-400 cursor-help" size={16} />
-                </Tooltip>
-              </span>
-            }
-            rules={[{ required: true, message: "Please enter max point" }]}
-          >
-            <Input
-              type="number"
-              placeholder="e.g., 10"
-              className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-            />
-          </Form.Item>
-          <Form.Item
             name="typeId"
             label={
               <span className="text-lg font-medium text-gray-800 flex items-center">
                 Question Type{" "}
-                <Tooltip title="Select the type of question (1: Multiple Choice, 2: Fill in Blank, 3: True/False)">
+                <Tooltip title="Select the type of question">
                   <Info className="ml-2 text-gray-400 cursor-help" size={16} />
                 </Tooltip>
               </span>
@@ -132,108 +124,12 @@ const EditExercisePage = ({
             rules={[{ required: true, message: "Please select question type" }]}
           >
             <Select
+              options={EXERCISE_TYPE_OPTIONS}
+              onChange={(option) => form.setFieldsValue({ typeId: option })}
+              styles={customStyles}
               placeholder="Select question type"
-              className="w-full rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-              getPopupContainer={(trigger) => trigger.parentNode}
-            >
-              <Option value={1}>Multiple Choice</Option>
-              <Option value={2}>Fill in Blank</Option>
-              <Option value={3}>True/False</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="questionContent"
-            label={
-              <span className="text-lg font-medium text-gray-800 flex items-center">
-                Question Content{" "}
-                <Tooltip title="Enter the specific question text">
-                  <Info className="ml-2 text-gray-400 cursor-help" size={16} />
-                </Tooltip>
-              </span>
-            }
-            rules={[
-              { required: true, message: "Please enter question content" },
-            ]}
-          >
-            <Input
-              placeholder="e.g., Is this statement true?"
-              className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+              className="w-full text-lg"
             />
-          </Form.Item>
-          <Form.Item
-            label={
-              <span className="text-lg font-medium text-gray-800 flex items-center">
-                Answers{" "}
-                <Tooltip title="Add or edit possible answers for the question">
-                  <Info className="ml-2 text-gray-400 cursor-help" size={16} />
-                </Tooltip>
-              </span>
-            }
-          >
-            <Form.List name="answers">
-              {(fields, { add, remove }) => (
-                <>
-                  {fields.map((field) => (
-                    <Space
-                      key={field.key}
-                      className="flex items-center mb-4"
-                      align="baseline"
-                    >
-                      <Form.Item
-                        {...field}
-                        name={[field.name, "answerContent"]}
-                        rules={[
-                          {
-                            required: true,
-                            message: "Please enter answer content",
-                          },
-                        ]}
-                      >
-                        <Input
-                          placeholder="e.g., Yes"
-                          className="rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </Form.Item>
-                      <Form.Item
-                        {...field}
-                        name={[field.name, "isCorrect"]}
-                        rules={[
-                          {
-                            required: true,
-                            message: "Please select if correct",
-                          },
-                        ]}
-                      >
-                        <Select
-                          className="w-40 rounded-lg border-gray-300 p-3 text-lg text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                          getPopupContainer={(trigger) => trigger.parentNode}
-                        >
-                          <Option value="true">Correct</Option>
-                          <Option value="false">Incorrect</Option>
-                        </Select>
-                      </Form.Item>
-                      {fields.length > 1 && (
-                        <Button
-                          onClick={() => remove(field.name)}
-                          className="bg-red-500 text-white rounded-lg px-4 py-2 hover:bg-red-600 transition-all duration-300 shadow-md hover:shadow-lg"
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </Space>
-                  ))}
-                  <Button
-                    type="dashed"
-                    onClick={() =>
-                      add({ answerContent: "", isCorrect: "false" })
-                    }
-                    className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg px-5 py-2.5 hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-md hover:shadow-lg"
-                  >
-                    Add Answer
-                  </Button>
-                </>
-              )}
-            </Form.List>
           </Form.Item>
           <div className="flex justify-end space-x-4">
             <Button

@@ -11,3 +11,9 @@ export const LEVEL_OPTIONS = [
   { value: 2, label: "Intermediate" },
   { value: 3, label: "Advanced" },
 ];
+
+export const EXERCISE_TYPE_OPTIONS = [
+  { value: 1, label: "Multiple Choice" },
+  { value: 2, label: "Fill in Blank" },
+  { value: 3, label: "True/False" },
+];
