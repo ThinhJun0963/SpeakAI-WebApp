@@ -1,4 +1,4 @@
-import React from "react";
+// InputField.jsx
 
 const InputField = ({
   id,

@@ -1,5 +1,4 @@
-import React from "react";
-
+// Label.jsx
 const Label = ({ children, className = "", ...props }) => {
   return (
     <label

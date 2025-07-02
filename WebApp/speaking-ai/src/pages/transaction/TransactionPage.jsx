@@ -1,3 +1,4 @@
+// TransactionPage.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { transactionApi, userApi } from "../../api/axiosInstance";
 import {
@@ -413,7 +414,7 @@ const TransactionPage = () => {
       {/* Transaction Table */}
       <motion.div variants={childVariants}>
         {loading ? (
-          <TransactionTableSkeleton />  
+          <TransactionTableSkeleton />
         ) : (
           <>
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4">

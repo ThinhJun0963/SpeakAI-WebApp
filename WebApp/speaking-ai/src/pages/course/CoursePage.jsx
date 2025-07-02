@@ -1,3 +1,4 @@
+// CoursePage.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { courseApi } from "../../api/axiosInstance";
 import {

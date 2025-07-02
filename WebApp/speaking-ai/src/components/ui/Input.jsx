@@ -1,5 +1,4 @@
-import React from "react";
-
+// Input.jsx
 const Input = ({
   label,
   error,

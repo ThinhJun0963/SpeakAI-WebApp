@@ -1,4 +1,4 @@
-import React from "react";
+// StatCards.jsx
 import { motion } from "framer-motion";
 import { BookOpen, Tag, CheckCircle, DollarSign } from "lucide-react";
 import { Card, CardContent } from "../ui/Card";

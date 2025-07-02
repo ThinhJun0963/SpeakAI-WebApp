@@ -1,3 +1,4 @@
+// SignUpPage.jsx
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";

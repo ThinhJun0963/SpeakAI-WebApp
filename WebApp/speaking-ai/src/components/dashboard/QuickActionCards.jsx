@@ -1,4 +1,4 @@
-import React from "react";
+// QuickActionCard.jsx
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Users, BookOpen, Tag, BarChart2, PlusCircle } from "lucide-react";

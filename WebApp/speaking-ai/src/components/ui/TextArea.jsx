@@ -1,5 +1,4 @@
-import React from "react";
-
+// TextArea.jsx
 const TextArea = ({
   label,
   error,

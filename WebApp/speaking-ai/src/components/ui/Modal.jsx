@@ -1,5 +1,4 @@
-import React from "react";
-
+// Modal.jsx
 const Modal = ({
   isOpen,
   onClose,

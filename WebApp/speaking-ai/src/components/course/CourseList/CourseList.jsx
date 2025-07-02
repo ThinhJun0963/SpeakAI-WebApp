@@ -1,4 +1,4 @@
-import React from "react";
+// CourseList.jsx
 import CourseCard from "./CourseCard";
 import { Card, Spin, Empty } from "antd";
 

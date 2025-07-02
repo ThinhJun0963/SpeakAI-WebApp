@@ -1,3 +1,4 @@
+// AdminPage.jsx
 import React, { useState, useEffect, memo } from "react";
 import { Menu, X } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";

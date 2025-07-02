@@ -1,3 +1,4 @@
+// CourseEditForm.jsx
 import React, { useState, useEffect } from "react";
 import { Modal, Form, Input, Select, Button, message, Checkbox } from "antd";
 import { courseApi } from "../../api/axiosInstance";
@@ -151,8 +152,6 @@ const CourseEditForm = ({ courseId, visible, onCancel, onSuccess }) => {
           >
             <Checkbox>Mark as Premium</Checkbox>
           </Form.Item>
-
-      
 
           <div className="flex justify-end space-x-4">
             <Button

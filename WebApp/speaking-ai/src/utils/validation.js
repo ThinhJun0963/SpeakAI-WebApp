@@ -1,3 +1,4 @@
+// validation.js
 export const validatePassword = (password) => {
   const passwordRegex = /^(?!.*\s)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/;
   if (!passwordRegex.test(password)) {

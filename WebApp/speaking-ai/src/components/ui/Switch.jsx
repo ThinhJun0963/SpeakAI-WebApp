@@ -1,5 +1,4 @@
-import React from "react";
-
+// Switch.jsx
 const Switch = ({ checked, onCheckedChange }) => {
   return (
     <button

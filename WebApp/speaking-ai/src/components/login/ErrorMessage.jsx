@@ -1,4 +1,4 @@
-import React from "react";
+// ErrorMessage.jsx
 import { motion } from "framer-motion";
 
 const ErrorMessage = ({ message }) => {

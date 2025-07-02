@@ -1,6 +1,6 @@
+// ModalConfirm.jsx
 import { Modal, Button } from "antd";
 import { toast } from "react-toastify"; // Assuming you're using react-toastify for notifications
-import { useNavigate } from "react-router-dom"; // Assuming you're using react-router-dom for navigation
 
 const handleLogout = () => {
   Modal.confirm({

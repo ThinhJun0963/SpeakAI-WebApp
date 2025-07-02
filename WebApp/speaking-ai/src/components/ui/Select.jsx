@@ -1,5 +1,4 @@
-import React from "react";
-
+// Select.jsx
 const Select = ({
   label = "",
   value = "",

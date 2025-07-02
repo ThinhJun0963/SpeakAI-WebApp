@@ -1,4 +1,4 @@
-import React from "react";
+// ActivityTable.jsx
 import { Card, CardContent } from "../ui/Card";
 
 const ActivityTable = ({ recentActivity }) => {

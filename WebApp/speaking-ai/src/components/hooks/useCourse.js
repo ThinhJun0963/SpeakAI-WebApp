@@ -1,3 +1,4 @@
+// useCourse.js
 import { useState, useCallback } from "react";
 import { courseService } from "../../services/courseService";
 

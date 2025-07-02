@@ -1,4 +1,4 @@
-import React from "react";
+// LoadingButton.jsx
 import { motion } from "framer-motion";
 
 const LoadingButton = ({ loading, text, loadingText }) => {
