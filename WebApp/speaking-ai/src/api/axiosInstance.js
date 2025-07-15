@@ -1,17 +1,17 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://sai.runasp.net/api", // Dynamic or fallback URL
-  // No default headers to allow axios to set Content-Type based on FormData
+  baseURL: import.meta.env.VITE_API_URL || "http://sai.runasp.net/api",
 });
 
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
-    // Let axios set Content-Type to multipart/form-data automatically for FormData
     if (config.data instanceof FormData) {
       config.headers["Content-Type"] = "multipart/form-data";
+    } else {
+      config.headers["Content-Type"] = "application/json";
     }
     return config;
   },
@@ -82,6 +82,15 @@ export const transactionApi = {
 
 export const userApi = {
   getUserById: (userId) => axiosInstance.get(`/users/${userId}`),
+};
+
+export const adminApi = {
+  getUsers: (pageNumber, pageSize) =>
+    axiosInstance.get("/Admin", { params: { pageNumber, pageSize } }),
+  updateUserStatus: (userId) =>
+    axiosInstance.put(`/Admin/${userId}/status`, true, {
+      headers: { "Content-Type": "application/json" },
+    }),
 };
 
 export default axiosInstance;

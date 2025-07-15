@@ -1,4 +1,3 @@
-// App.jsx
 import {
   BrowserRouter as Router,
   Routes,
@@ -20,10 +19,11 @@ import VoucherPage from "./pages/voucher/VoucherPage";
 import CreateVoucherPage from "./pages/voucher/CreateVoucherPage";
 import VoucherEditPage from "./pages/voucher/VoucherEditPage";
 import TransactionPage from "./pages/transaction/TransactionPage";
+import UserListPage from "./pages/user/UserListPage";
 import { courseApi, voucherApi } from "./api/axiosInstance";
 import { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
-import EditExercisePage from "./pages/course/EditExercisePage"; // Sửa import
+import EditExercisePage from "./pages/course/EditExercisePage";
 import EditTopicPage from "./pages/course/EditTopicPage";
 
 const clientId =
@@ -72,6 +72,7 @@ function App() {
               element={<VoucherEditFormWrapper />}
             />
             <Route path="/transactions" element={<TransactionPage />} />
+            <Route path="/users" element={<UserListPage />} />
           </Route>
         </Routes>
         <ToastContainer
