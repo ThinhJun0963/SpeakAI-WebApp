@@ -1,4 +1,3 @@
-// Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -11,11 +10,16 @@ const SidebarSkeleton = () => (
       <Skeleton active title={{ width: "60%" }} paragraph={false} />
     </div>
     <nav className="mt-6 space-y-1 px-2">
-      {[...Array(4)].map((_, index) => (
-        <div key={index} className="flex items-center p-3">
-          <Skeleton avatar active paragraph={false} className="w-full" />
-        </div>
-      ))}
+      {[...Array(5)].map(
+        (
+          _,
+          index // Increased to 5 for new item
+        ) => (
+          <div key={index} className="flex items-center p-3">
+            <Skeleton avatar active paragraph={false} className="w-full" />
+          </div>
+        )
+      )}
     </nav>
     <div className="absolute bottom-0 w-full p-4">
       <Skeleton avatar active paragraph={false} className="w-full" />
@@ -28,6 +32,7 @@ const menuItems = [
   { icon: Users, label: "Courses", path: "/courses", badge: 0 },
   { icon: Tag, label: "Vouchers", path: "/vouchers", badge: 0 },
   { icon: CreditCard, label: "Transactions", path: "/transactions", badge: 0 },
+  { icon: Users, label: "Users", path: "/users", badge: 0 }, // New Users item
 ];
 
 const Sidebar = ({
@@ -52,9 +57,7 @@ const Sidebar = ({
       okText: "Yes",
       cancelText: "No",
       onOk: () => {
-        // Xóa hết localStorage
         localStorage.clear();
-        // Chuyển hướng về trang login
         navigate("/login");
       },
     });
