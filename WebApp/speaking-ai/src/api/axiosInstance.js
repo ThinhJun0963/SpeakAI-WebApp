@@ -87,10 +87,14 @@ export const userApi = {
 export const adminApi = {
   getUsers: (pageNumber, pageSize) =>
     axiosInstance.get("/Admin", { params: { pageNumber, pageSize } }),
-  updateUserStatus: (userId) =>
-    axiosInstance.put(`/Admin/${userId}/status`, true, {
-      headers: { "Content-Type": "application/json" },
-    }),
+  updateUserStatus: (userId, isActive) =>
+    axiosInstance.put(
+      `/Admin/${userId}/status`,
+      { isActive },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    ),
 };
 
 export default axiosInstance;

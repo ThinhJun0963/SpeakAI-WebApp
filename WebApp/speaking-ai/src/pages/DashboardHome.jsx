@@ -1,4 +1,3 @@
-// DashboardHome.jsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "antd";
@@ -77,7 +76,7 @@ const DashboardHome = () => {
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
   const [courseData, setCourseData] = useState([]);
-  const [voucherData, setVoucherData] = useState([]); // Thêm state cho vouchers
+  const [voucherData, setVoucherData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -170,7 +169,7 @@ const DashboardHome = () => {
         setStats(statsData);
         setActivity(recentActivityData);
         setCourseData(courses);
-        setVoucherData(vouchers); // Lưu dữ liệu vouchers
+        setVoucherData(vouchers);
       } catch (err) {
         setError("Failed to load dashboard data: " + err.message);
         console.error(err);
