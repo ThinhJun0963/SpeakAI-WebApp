@@ -1,4 +1,3 @@
-// TransactionPage.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { transactionApi, userApi } from "../../api/axiosInstance";
 import {
@@ -17,37 +16,27 @@ import {
 import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 import debounce from "lodash/debounce";
-import { Line, Pie } from "@ant-design/plots";
+import { Pie, Column } from "@ant-design/plots";
 import moment from "moment";
 
 const { Option } = Select;
 
-// Variants cho hiệu ứng load của container chính
+// Animation variants
 const containerVariants = {
   hidden: { opacity: 0, y: 50 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut",
-      when: "beforeChildren",
-      staggerChildren: 0.1,
-    },
+    transition: { duration: 0.6, ease: "easeOut", staggerChildren: 0.1 },
   },
 };
 
-// Variants cho các thành phần con
 const childVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-// Skeleton cho Statistics Cards
+// Skeleton for Statistics Cards
 const StatisticsCardsSkeleton = () => (
   <Row gutter={[16, 16]} className="mb-6">
     {[...Array(3)].map((_, index) => (
@@ -61,36 +50,34 @@ const StatisticsCardsSkeleton = () => (
   </Row>
 );
 
-// Skeleton cho Charts
+// Skeleton for Charts
 const ChartsSkeleton = () => (
   <Row gutter={[16, 16]} className="mb-6">
-    <Col xs={24} md={12}>
-      <Card title="Status Distribution">
-        <Skeleton active paragraph={{ rows: 4 }} title={false} />
-      </Card>
-    </Col>
-    <Col xs={24} md={12}>
-      <Card title="Revenue Over Time (VND)">
-        <Skeleton active paragraph={{ rows: 4 }} title={false} />
-      </Card>
-    </Col>
+    {["Status Distribution", "Revenue Over Time (VND)"].map((title) => (
+      <Col key={title} xs={24} md={12}>
+        <Card title={title}>
+          <Skeleton active paragraph={{ rows: 4 }} title={false} />
+        </Card>
+      </Col>
+    ))}
   </Row>
 );
 
-// Skeleton cho Transaction Table (bao gồm search bar, status filter, table, và pagination)
+// Skeleton for Transaction Table
 const TransactionTableSkeleton = () => (
   <div>
-    <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-      <Skeleton active paragraph={false} title={{ width: "30%" }} />
-      <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-        <Skeleton.Input active style={{ width: 256, height: 40 }} />
-        <Skeleton.Input active style={{ width: 128, height: 40 }} />
-      </div>
-    </div>
+    <Skeleton
+      active
+      paragraph={false}
+      title={{ width: "30%" }}
+      className="mb-4"
+    />
     <Skeleton active paragraph={{ rows: 5 }} />
-    <div className="text-center mt-4">
-      <Skeleton.Button active style={{ width: 200, height: 32 }} />
-    </div>
+    <Skeleton.Button
+      active
+      style={{ width: 200, height: 32 }}
+      className="mt-4"
+    />
   </div>
 );
 
@@ -103,12 +90,12 @@ const TransactionPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [sortField, setSortField] = useState("transactionDate");
-  const [sortOrder, setSortOrder] = useState("descend");
+  const [error, setError] = useState(null);
 
   const fetchTransactions = useCallback(async () => {
+    if (loading) return;
     setLoading(true);
+    setError(null);
     try {
       const response = await transactionApi.getList(
         statusFilter,
@@ -116,50 +103,30 @@ const TransactionPage = () => {
         pageSize
       );
       const data = response.result || {};
-      console.log("Transaction data:", data);
-      const transactionList = data.items || [];
+      const transactionList = (data.items || []).map((t) => ({
+        ...t,
+        paymentMethod: t.paymentMethod || "PayOs",
+        amount: t.amount || 0,
+      }));
 
-      const validTransactions = transactionList.filter(
-        (transaction) =>
-          transaction.status && typeof transaction.status === "string"
-      );
-
-      const userIds = [...new Set(validTransactions.map((t) => t.userId))];
-      const userNamePromises = userIds.map(async (userId) => {
-        try {
-          const userResponse = await userApi.getUserById(userId);
-          return {
+      const userIds = [...new Set(transactionList.map((t) => t.userId))];
+      const userNameMap = Object.fromEntries(
+        await Promise.all(
+          userIds.map(async (userId) => [
             userId,
-            userName: userResponse.userName || "Unknown",
-          };
-        } catch (error) {
-          console.error(`Failed to fetch user ${userId}:`, error);
-          return { userId, userName: "Unknown" };
-        }
-      });
-
-      const userNameResults = await Promise.all(userNamePromises);
-      const userNameMap = userNameResults.reduce(
-        (acc, { userId, userName }) => {
-          acc[userId] = userName;
-          return acc;
-        },
-        {}
+            (await userApi.getUserById(userId)).userName || "Unknown",
+          ])
+        )
       );
 
       setUserNames(userNameMap);
-      setTransactions(validTransactions);
+      setTransactions(transactionList);
       setTotalCount(data.totalCount || 0);
-      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error("Failed to fetch transactions:", error);
-      Modal.error({
-        title: "Error",
-        content: "Failed to load transactions.",
-      });
+      setError("Failed to load transactions. Please try again later.");
       setTransactions([]);
       setTotalCount(0);
-      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -174,103 +141,103 @@ const TransactionPage = () => {
     setCurrentPage(1);
   }, 300);
 
-  const handleStatusFilter = (value) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleTableChange = (pagination, filters, sorter) => {
-    setSortField(sorter.field || "transactionDate");
-    setSortOrder(sorter.order || "descend");
-  };
-
-  const filteredTransactions = transactions
-    .filter((transaction) => {
-      const searchLower = searchTerm.toLowerCase();
-      return userNames[transaction.userId]?.toLowerCase().includes(searchLower);
-    })
-    .sort((a, b) => {
-      const fieldA = a[sortField];
-      const fieldB = b[sortField];
-      if (sortField === "transactionDate") {
-        return sortOrder === "ascend"
-          ? new Date(fieldA) - new Date(fieldB)
-          : new Date(fieldB) - new Date(fieldA);
-      }
-      return sortOrder === "ascend" ? fieldA - fieldB : fieldB - fieldA;
-    });
-
-  const totalRevenue = transactions.reduce(
-    (sum, transaction) => sum + (transaction.amount || 0),
-    0
+  const filteredTransactions = transactions.filter((t) =>
+    userNames[t.userId]?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  const statusDistribution = transactions.reduce((acc, transaction) => {
-    const status = transaction.status || "Unknown";
-    acc[status] = (acc[status] || 0) + 1;
-    return acc;
-  }, {});
 
-  const statusChartData = Object.keys(statusDistribution).map((status) => ({
-    type: status,
-    value: statusDistribution[status],
-    color:
-      status === "Paid"
-        ? "#52c41a"
-        : status === "Pending"
-        ? "#faad14"
-        : status === "Failed"
-        ? "#ff4d4f"
-        : "#d9d9d9",
-  }));
+  const totalTransactions = filteredTransactions?.length || 0; // Tránh undefined
+  const totalRevenue =
+    filteredTransactions.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+  const statusDistribution =
+    filteredTransactions.reduce(
+      (acc, t) => ({
+        ...acc,
+        [t.status]: (acc[t.status] || 0) + 1,
+      }),
+      {}
+    ) || {}; // Đảm bảo là object
 
-  const revenueChartData = transactions
-    .map((transaction) => ({
-      date: moment(transaction.transactionDate).format("YYYY-MM-DD"),
-      amount: transaction.amount || 0,
-    }))
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const statusChartData =
+    Object.entries(statusDistribution).length > 0
+      ? Object.entries(statusDistribution).map(([type, count]) => ({
+          type,
+          percent:
+            typeof totalTransactions === "number" && totalTransactions > 0
+              ? (count / totalTransactions) * 100
+              : 0,
+          color:
+            type === "Paid"
+              ? "#52c41a"
+              : type === "Pending"
+              ? "#faad14"
+              : "#ff4d4f",
+        }))
+      : [
+          { type: "Paid", percent: 0, color: "#52c41a" },
+          { type: "Pending", percent: 0, color: "#faad14" },
+          { type: "Cancel", percent: 0, color: "#ff4d4f" },
+        ];
+
+  const revenueChartData = Object.entries(
+    filteredTransactions.reduce(
+      (acc, t) => ({
+        ...acc,
+        [moment(t.transactionDate).format("YYYY-MM-DD")]:
+          (acc[moment(t.transactionDate).format("YYYY-MM-DD")] || 0) +
+          (t.amount || 0),
+      }),
+      {}
+    ) || {}
+  ).map(([date, amount]) => ({ date, amount }));
+
+  const formatVND = (amount) =>
+    amount != null
+      ? `${amount.toLocaleString("vi-VN", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })},000đ`
+      : "N/A";
 
   const columns = [
     {
       title: "Date",
       dataIndex: "transactionDate",
-      key: "transactionDate",
-      sorter: true,
+      sorter: (a, b) =>
+        new Date(a.transactionDate) - new Date(b.transactionDate),
       render: (date) =>
         date ? moment(date).format("DD/MM/YYYY HH:mm") : "N/A",
     },
     {
       title: "Amount (VND)",
       dataIndex: "amount",
-      key: "amount",
-      sorter: true,
-      render: (amount) => (amount !== undefined ? `${amount}` : "N/A"),
+      sorter: (a, b) => (a.amount || 0) - (b.amount || 0),
+      render: (amount) => formatVND(amount),
     },
     {
       title: "Payment Method",
-      key: "paymentMethod",
-      render: () => "VnPay",
+      dataIndex: "paymentMethod",
+      render: (method) => method || "PayOs",
     },
     {
       title: "Status",
       dataIndex: "status",
-      key: "status",
-      render: (status) => {
-        const color =
-          status === "Paid"
-            ? "green"
-            : status === "Pending"
-            ? "yellow"
-            : status === "Failed"
-            ? "red"
-            : "gray";
-        return <Tag color={color}>{status || "Unknown"}</Tag>;
-      },
+      render: (status) => (
+        <Tag
+          color={
+            status === "Paid"
+              ? "green"
+              : status === "Pending"
+              ? "yellow"
+              : "red"
+          }
+        >
+          {status || "Unknown"}
+        </Tag>
+      ),
     },
     {
       title: "Username",
       dataIndex: "userId",
-      key: "userId",
       render: (userId) => userNames[userId] || "N/A",
     },
   ];
@@ -282,199 +249,137 @@ const TransactionPage = () => {
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={childVariants}>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-          Transaction Management
-        </h1>
-      </motion.div>
+      <motion.h1 variants={childVariants} className="text-2xl font-bold mb-6">
+        Transaction Management
+      </motion.h1>
 
       {/* Statistics Cards */}
-      <motion.div variants={childVariants}>
-        {loading ? (
-          <StatisticsCardsSkeleton />
-        ) : (
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col xs={24} sm={12} md={8}>
-              <Card>
-                <Statistic
-                  title="Total Revenue (VND)"
-                  value={totalRevenue}
-                  precision={1}
-                  prefix="₫"
-                  valueStyle={{ color: "#3f8600" }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-              <Card>
-                <Statistic
-                  title="Pending Transactions"
-                  value={statusDistribution.Pending || 0}
-                  valueStyle={{ color: "#faad14" }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-              <Card>
-                <Statistic
-                  title="Completed Transactions"
-                  value={statusDistribution.Paid || 0}
-                  valueStyle={{ color: "#52c41a" }}
-                />
-              </Card>
-            </Col>
-          </Row>
-        )}
-      </motion.div>
+      {loading ? (
+        <StatisticsCardsSkeleton />
+      ) : error ? (
+        <div className="text-center py-4 text-red-500">{error}</div>
+      ) : (
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col xs={24} sm={12} md={8}>
+            <Card>
+              <Statistic
+                title="Total Revenue (VND)"
+                value={totalRevenue}
+                formatter={formatVND}
+                valueStyle={{ color: "#3f8600" }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card>
+              <Statistic
+                title="Pending Transactions"
+                value={statusDistribution.Pending || 0}
+                valueStyle={{ color: "#faad14" }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card>
+              <Statistic
+                title="Completed Transactions"
+                value={statusDistribution.Paid || 0}
+                valueStyle={{ color: "#52c41a" }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* Charts */}
-      <motion.div variants={childVariants}>
-        {loading ? (
-          <ChartsSkeleton />
-        ) : (
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col xs={24} md={12}>
-              <Card title="Status Distribution">
-                {statusChartData.length > 0 ? (
-                  <Pie
-                    data={statusChartData}
-                    angleField="value"
-                    colorField="type"
-                    color={({ type }) =>
-                      type === "Paid"
-                        ? "#52c41a"
-                        : type === "Pending"
-                        ? "#faad14"
-                        : type === "Failed"
-                        ? "#ff4d4f"
-                        : "#d9d9d9"
-                    }
-                    radius={0.8}
-                    innerRadius={0.6}
-                    label={{
-                      offset: -20,
-                      content: ({ percent }) =>
-                        `${(percent * 100).toFixed(0)}%`,
-                      style: {
-                        fontSize: 14,
-                        textAlign: "center",
-                        fill: "#fff",
-                      },
-                    }}
-                    statistic={{
-                      title: {
-                        content: "Transactions",
-                        style: { fontSize: 16 },
-                      },
-                      content: { style: { fontSize: 20 } },
-                    }}
-                  />
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    No data available.
-                  </div>
-                )}
-              </Card>
-            </Col>
-            <Col xs={24} md={12}>
-              <Card title="Revenue Over Time (VND)">
-                {revenueChartData.length > 0 ? (
-                  <Line
-                    data={revenueChartData}
-                    xField="date"
-                    yField="amount"
-                    yAxis={{
-                      label: { formatter: (v) => `${v}` },
-                    }}
-                    point={{
-                      size: 5,
-                      shape: "diamond",
-                      style: { fill: "#1890ff" },
-                    }}
-                    lineStyle={{ stroke: "#1890ff", lineWidth: 2 }}
-                    tooltip={{
-                      formatter: (datum) => ({
-                        name: "Revenue",
-                        value: `${datum.amount} VND`,
-                      }),
-                    }}
-                    smooth
-                  />
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    No data available.
-                  </div>
-                )}
-              </Card>
-            </Col>
-          </Row>
-        )}
-      </motion.div>
+      {loading ? (
+        <ChartsSkeleton />
+      ) : error ? (
+        <div className="text-center py-4 text-red-500">{error}</div>
+      ) : (
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col xs={24} md={12}>
+            <Card title="Status Distribution">
+              <Pie
+                data={statusChartData}
+                angleField="percent"
+                colorField="type"
+                radius={0.8}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} md={12}>
+            <Card title="Revenue Over Time (VND)">
+              <Column
+                data={revenueChartData}
+                xField="date"
+                yField="amount"
+                meta={{ amount: { formatter: formatVND } }}
+                label={{
+                  position: "top",
+                  style: { fill: "#fff", opacity: 0.6 },
+                }}
+                columnStyle={{ fill: "blue" }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* Transaction Table */}
-      <motion.div variants={childVariants}>
-        {loading ? (
-          <TransactionTableSkeleton />
-        ) : (
-          <>
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 sm:mb-0">
-                Transaction List
-              </h2>
-              <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <Input
-                  placeholder="Search by Username..."
-                  prefix={<Search className="h-4 w-4 text-gray-400" />}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full sm:w-64"
-                  disabled={loading}
-                />
-                <Select
-                  value={statusFilter}
-                  onChange={handleStatusFilter}
-                  className="w-full sm:w-32"
-                  disabled={loading}
-                >
-                  <Option value="All">All</Option>
-                  <Option value="Pending">Pending</Option>
-                  <Option value="Paid">Paid</Option>
-                  <Option value="Failed">Failed</Option>
-                </Select>
-              </div>
+      {loading ? (
+        <TransactionTableSkeleton />
+      ) : error ? (
+        <div className="text-center py-4 text-red-500">{error}</div>
+      ) : (
+        <>
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold mb-4 sm:mb-0">
+              Transaction List
+            </h2>
+            <div className="flex space-y-4 sm:space-y-0 sm:space-x-4">
+              <Input
+                placeholder="Search by Username..."
+                prefix={<Search className="h-4 w-4 text-gray-400" />}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-64"
+              />
+              <Select
+                value={statusFilter}
+                onChange={(value) => {
+                  setStatusFilter(value);
+                  setCurrentPage(1);
+                }}
+                className="w-32"
+              >
+                <Option value="All">All</Option>
+                <Option value="Pending">Pending</Option>
+                <Option value="Paid">Paid</Option>
+                <Option value="Failed">Failed</Option>
+              </Select>
             </div>
-
-            {transactions.length > 0 ? (
-              <>
-                <Table
-                  columns={columns}
-                  dataSource={filteredTransactions}
-                  rowKey={(record) => record.transactionId}
-                  pagination={false}
-                  scroll={{ x: "max-content" }}
-                  onChange={handleTableChange}
-                  className="mb-4"
-                />
-                <Pagination
-                  current={currentPage}
-                  pageSize={pageSize}
-                  total={totalCount}
-                  onChange={(page, size) => {
-                    setCurrentPage(page);
-                    setPageSize(size);
-                  }}
-                  showSizeChanger
-                  pageSizeOptions={["5", "10", "20"]}
-                  className="text-center"
-                />
-              </>
-            ) : (
-              <div className="text-center py-10 text-gray-500">
-                No transactions found.
-              </div>
-            )}
-          </>
-        )}
-      </motion.div>
+          </div>
+          <Table
+            columns={columns}
+            dataSource={filteredTransactions}
+            rowKey="transactionId"
+            pagination={false}
+            scroll={{ x: "max-content" }}
+          />
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={totalCount}
+            onChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            showSizeChanger
+            pageSizeOptions={["5", "10", "20"]}
+            className="text-center mt-4"
+          />
+        </>
+      )}
     </motion.div>
   );
 };
