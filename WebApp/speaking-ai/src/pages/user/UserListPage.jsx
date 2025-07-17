@@ -60,30 +60,48 @@ const UserListPage = () => {
     fetchUsers(pagination.current, pagination.pageSize);
   };
 
-  const handleToggleUserStatus = async (userId, currentStatus) => {
-    const newStatus = !currentStatus;
+  const handleActivateUser = async (userId) => {
     setLoading(true);
     try {
-      await adminApi.updateUserStatus(userId, newStatus);
+      await adminApi.updateUserStatus(userId, true); // Gửi isActive: true khi kích hoạt
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
-          user.userId === userId ? { ...user, isActive: newStatus } : user
+          user.userId === userId ? { ...user, isActive: true } : user
         )
       );
       Modal.success({
         title: "Success",
-        content: `User ${
-          newStatus ? "activated" : "deactivated"
-        } successfully.`,
+        content: "User activated successfully.",
       });
     } catch (error) {
-      console.error(
-        `Failed to ${newStatus ? "activate" : "deactivate"} user:`,
-        error
-      );
+      console.error("Failed to activate user:", error);
       Modal.error({
         title: "Error",
-        content: `Failed to ${newStatus ? "activate" : "deactivate"} user.`,
+        content: "Failed to activate user.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeactivateUser = async (userId) => {
+    setLoading(true);
+    try {
+      await adminApi.updateUserStatus(userId, false); // Gửi isActive: false khi hủy kích hoạt
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.userId === userId ? { ...user, isActive: false } : user
+        )
+      );
+      Modal.success({
+        title: "Success",
+        content: "User deactivated successfully.",
+      });
+    } catch (error) {
+      console.error("Failed to deactivate user:", error);
+      Modal.error({
+        title: "Error",
+        content: "Failed to deactivate user.",
       });
     } finally {
       setLoading(false);
@@ -156,7 +174,11 @@ const UserListPage = () => {
       key: "actions",
       render: (_, record) => (
         <Button
-          onClick={() => handleToggleUserStatus(record.userId, record.isActive)}
+          onClick={() =>
+            record.isActive
+              ? handleDeactivateUser(record.userId)
+              : handleActivateUser(record.userId)
+          }
           loading={loading}
         >
           {record.isActive ? "Deactivate" : "Activate"}
