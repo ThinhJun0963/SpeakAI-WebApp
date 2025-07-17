@@ -157,7 +157,7 @@ const SignUpPage = () => {
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
+              className="w-full p-2 border rounded-lg text-gray-900"
               required
             >
               <option value="">Select Gender</option>

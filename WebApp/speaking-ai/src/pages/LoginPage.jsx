@@ -146,15 +146,17 @@ const LoginPage = () => {
           </form>
 
           <div className="mt-4 space-y-4">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              size="large"
-              theme="outline"
-              text="signin_with"
-              shape="pill"
-              disabled={loadingGoogle}
-            />
+            {false && (
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                size="large"
+                theme="outline"
+                text="signin_with"
+                shape="pill"
+                disabled={loadingGoogle}
+              />
+            )}
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-600">
