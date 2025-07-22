@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { transactionApi, userApi } from "../../api/axiosInstance";
 import {
   Table,
@@ -11,17 +11,17 @@ import {
   Statistic,
   Row,
   Col,
-  Modal,
 } from "antd";
 import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 import debounce from "lodash/debounce";
 import { Pie, Column } from "@ant-design/plots";
 import moment from "moment";
+import useApi from "../../components/hooks/useApi";
 
 const { Option } = Select;
 
-// Animation variants
+// Các biến thể animation cho giao diện
 const containerVariants = {
   hidden: { opacity: 0, y: 50 },
   visible: {
@@ -36,7 +36,7 @@ const childVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-// Skeleton for Statistics Cards
+// Các thành phần Skeleton để hiển thị khi đang tải
 const StatisticsCardsSkeleton = () => (
   <Row gutter={[16, 16]} className="mb-6">
     {[...Array(3)].map((_, index) => (
@@ -50,7 +50,6 @@ const StatisticsCardsSkeleton = () => (
   </Row>
 );
 
-// Skeleton for Charts
 const ChartsSkeleton = () => (
   <Row gutter={[16, 16]} className="mb-6">
     {["Status Distribution", "Revenue Over Time (VND)"].map((title) => (
@@ -63,7 +62,6 @@ const ChartsSkeleton = () => (
   </Row>
 );
 
-// Skeleton for Transaction Table
 const TransactionTableSkeleton = () => (
   <div>
     <Skeleton
@@ -82,114 +80,119 @@ const TransactionTableSkeleton = () => (
 );
 
 const TransactionPage = () => {
-  const [transactions, setTransactions] = useState([]);
+  const { data: allTransactions, loading, error, execute } = useApi([]);
   const [userNames, setUserNames] = useState({});
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const [totalCount, setTotalCount] = useState(0);
-  const [error, setError] = useState(null);
+  const [pageSize, setPageSize] = useState(10);
 
-  const fetchTransactions = useCallback(async () => {
-    if (loading) return;
-    setLoading(true);
-    setError(null);
+  // Hàm lấy toàn bộ giao dịch từ API
+  const fetchAllTransactions = async (status, pageSize = 100) => {
+    let allTransactions = [];
+    let currentPage = 1;
+    let totalCount = 0;
+
     try {
-      const response = await transactionApi.getList(
-        statusFilter,
-        currentPage,
-        pageSize
-      );
-      const data = response.result || {};
-      const transactionList = (data.items || []).map((t) => ({
-        ...t,
-        paymentMethod: t.paymentMethod || "PayOs",
-        amount: t.amount || 0,
-      }));
-
-      const userIds = [...new Set(transactionList.map((t) => t.userId))];
-      const userNameMap = Object.fromEntries(
-        await Promise.all(
-          userIds.map(async (userId) => [
-            userId,
-            (await userApi.getUserById(userId)).userName || "Unknown",
-          ])
-        )
-      );
-
-      setUserNames(userNameMap);
-      setTransactions(transactionList);
-      setTotalCount(data.totalCount || 0);
+      do {
+        const response = await transactionApi.getList(
+          "All", // Lấy tất cả trạng thái
+          currentPage,
+          pageSize
+        );
+        const data = response.result || {};
+        const transactions = data.items || [];
+        allTransactions = [...allTransactions, ...transactions];
+        totalCount = data.totalCount || 0;
+        currentPage += 1;
+      } while (allTransactions.length < totalCount);
     } catch (error) {
-      console.error("Failed to fetch transactions:", error);
-      setError("Failed to load transactions. Please try again later.");
-      setTransactions([]);
-      setTotalCount(0);
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch all transactions:", error);
+      throw error;
     }
-  }, [statusFilter, currentPage, pageSize]);
 
+    return allTransactions;
+  };
+
+  // Hàm lấy tên người dùng từ danh sách giao dịch
+  const fetchUserNames = async (transactions) => {
+    const userIds = [...new Set(transactions.map((t) => t.userId))];
+    const userNameMap = Object.fromEntries(
+      await Promise.all(
+        userIds.map(async (userId) => [
+          userId,
+          (await userApi.getUserById(userId)).userName || "Unknown",
+        ])
+      )
+    );
+    setUserNames(userNameMap);
+  };
+
+  // Tải dữ liệu một lần khi component mount
   useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+    const fetchData = async () => {
+      try {
+        const transactions = await execute(fetchAllTransactions, "All");
+        await fetchUserNames(transactions);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
+    fetchData();
+  }, [execute]);
 
+  // Xử lý tìm kiếm với debounce
   const handleSearch = debounce((value) => {
     setSearchTerm(value);
     setCurrentPage(1);
   }, 300);
 
-  const filteredTransactions = transactions.filter((t) =>
-    userNames[t.userId]?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Lọc giao dịch theo statusFilter và searchTerm
+  const filteredTransactions = useMemo(() => {
+    let filtered = allTransactions;
+
+    // Áp dụng bộ lọc trạng thái
+    if (statusFilter !== "All") {
+      filtered = filtered.filter((t) => t.status === statusFilter);
+    }
+
+    // Áp dụng tìm kiếm theo tên người dùng
+    if (searchTerm) {
+      filtered = filtered.filter((t) =>
+        userNames[t.userId]?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return filtered;
+  }, [allTransactions, statusFilter, searchTerm, userNames]);
+
+  // Phân trang giao dịch
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredTransactions.slice(start, end);
+  }, [filteredTransactions, currentPage, pageSize]);
+
+  const totalCount = filteredTransactions.length;
+
+  // Tính toán thống kê từ toàn bộ giao dịch
+  const totalRevenue = allTransactions.reduce(
+    (sum, t) => (t.status === "Paid" ? sum + (t.amount || 0) : sum),
+    0
   );
-
-  const totalTransactions = filteredTransactions?.length || 0; // Tránh undefined
-  const totalRevenue =
-    filteredTransactions.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-  const statusDistribution =
-    filteredTransactions.reduce(
-      (acc, t) => ({
-        ...acc,
-        [t.status]: (acc[t.status] || 0) + 1,
-      }),
-      {}
-    ) || {}; // Đảm bảo là object
-
-  const statusChartData =
-    Object.entries(statusDistribution).length > 0
-      ? Object.entries(statusDistribution).map(([type, count]) => ({
-          type,
-          percent:
-            typeof totalTransactions === "number" && totalTransactions > 0
-              ? (count / totalTransactions) * 100
-              : 0,
-          color:
-            type === "Paid"
-              ? "#52c41a"
-              : type === "Pending"
-              ? "#faad14"
-              : "#ff4d4f",
-        }))
-      : [
-          { type: "Paid", percent: 0, color: "#52c41a" },
-          { type: "Pending", percent: 0, color: "#faad14" },
-          { type: "Cancel", percent: 0, color: "#ff4d4f" },
-        ];
-
-  const revenueChartData = Object.entries(
-    filteredTransactions.reduce(
-      (acc, t) => ({
-        ...acc,
-        [moment(t.transactionDate).format("YYYY-MM-DD")]:
-          (acc[moment(t.transactionDate).format("YYYY-MM-DD")] || 0) +
-          (t.amount || 0),
-      }),
-      {}
-    ) || {}
+  const statusDistribution = allTransactions.reduce((acc, t) => {
+    acc[t.status] = (acc[t.status] || 0) + 1;
+    return acc;
+  }, {});
+  const revenueOverTime = Object.entries(
+    allTransactions.reduce((acc, t) => {
+      const date = moment(t.transactionDate).format("YYYY-MM-DD");
+      acc[date] = (acc[date] || 0) + (t.amount || 0);
+      return acc;
+    }, {})
   ).map(([date, amount]) => ({ date, amount }));
 
+  // Định dạng số tiền VND
   const formatVND = (amount) =>
     amount != null
       ? `${amount.toLocaleString("vi-VN", {
@@ -198,6 +201,7 @@ const TransactionPage = () => {
         })},000đ`
       : "N/A";
 
+  // Cấu hình cột cho bảng giao dịch
   const columns = [
     {
       title: "Date",
@@ -253,7 +257,7 @@ const TransactionPage = () => {
         Transaction Management
       </motion.h1>
 
-      {/* Statistics Cards */}
+      {/* Thẻ thống kê */}
       {loading ? (
         <StatisticsCardsSkeleton />
       ) : error ? (
@@ -291,7 +295,7 @@ const TransactionPage = () => {
         </Row>
       )}
 
-      {/* Charts */}
+      {/* Biểu đồ */}
       {loading ? (
         <ChartsSkeleton />
       ) : error ? (
@@ -301,7 +305,12 @@ const TransactionPage = () => {
           <Col xs={24} md={12}>
             <Card title="Status Distribution">
               <Pie
-                data={statusChartData}
+                data={Object.entries(statusDistribution).map(
+                  ([type, count]) => ({
+                    type,
+                    percent: (count / allTransactions.length) * 100 || 0,
+                  })
+                )}
                 angleField="percent"
                 colorField="type"
                 radius={0.8}
@@ -311,7 +320,7 @@ const TransactionPage = () => {
           <Col xs={24} md={12}>
             <Card title="Revenue Over Time (VND)">
               <Column
-                data={revenueChartData}
+                data={revenueOverTime}
                 xField="date"
                 yField="amount"
                 meta={{ amount: { formatter: formatVND } }}
@@ -326,7 +335,7 @@ const TransactionPage = () => {
         </Row>
       )}
 
-      {/* Transaction Table */}
+      {/* Bảng giao dịch */}
       {loading ? (
         <TransactionTableSkeleton />
       ) : error ? (
@@ -355,13 +364,13 @@ const TransactionPage = () => {
                 <Option value="All">All</Option>
                 <Option value="Pending">Pending</Option>
                 <Option value="Paid">Paid</Option>
-                <Option value="Failed">Failed</Option>
+                <Option value="Cancel">Cancel</Option>
               </Select>
             </div>
           </div>
           <Table
             columns={columns}
-            dataSource={filteredTransactions}
+            dataSource={paginatedTransactions}
             rowKey="transactionId"
             pagination={false}
             scroll={{ x: "max-content" }}
@@ -375,7 +384,7 @@ const TransactionPage = () => {
               setPageSize(size);
             }}
             showSizeChanger
-            pageSizeOptions={["5", "10", "20"]}
+            pageSizeOptions={["10", "20", "50", "100"]}
             className="text-center mt-4"
           />
         </>
